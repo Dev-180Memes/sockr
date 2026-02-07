@@ -1,0 +1,1 @@
+SOCKR - A Person to person real time messaging framework built on top of WebRTC and WebSockets.

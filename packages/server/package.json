@@ -1,5 +1,5 @@
 {
-  "name": "sockr-shared",
+  "name": "sockr-server",
   "version": "1.0.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -16,7 +16,11 @@
     "build": "tsup",
     "clean": "rm -rf dist"
   },
+  "dependencies": {
+    "socket.io": "^4.8.3"
+  },
   "devDependencies": {
+    "@types/node": "^25.2.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
