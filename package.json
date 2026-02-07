@@ -1,0 +1,25 @@
+{
+  "name": "sockr",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Person-to-person WebSocket messaging system",
+  "scripts": {
+    "dev": "pnpm --filter \"./packages/**\" --parallel dev",
+    "build": "pnpm --filter \"./packages/**\" build",
+    "clean": "pnpm --filter \"./packages/**\" clean"
+  },
+  "keywords": [
+    "websocket",
+    "socket.io",
+    "messaging",
+    "real-time",
+    "communication"
+  ],
+  "author": "Adeoluwa Agbakosi",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.1",
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
