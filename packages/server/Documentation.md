@@ -8,6 +8,10 @@ Complete reference for the `sockr-server` package.
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Server Modes](#server-modes)
+  - [Standalone](#standalone)
+  - [Attach to HTTP Server](#attach-to-an-existing-http-server)
+  - [Attach to Express](#attach-to-express)
 - [Server Configuration](#server-configuration)
 - [Authentication](#authentication)
 - [Presence Tracking](#presence-tracking)
@@ -18,7 +22,7 @@ Complete reference for the `sockr-server` package.
 - [Socket Events Reference](#socket-events-reference)
 - [Error Handling](#error-handling)
 - [Graceful Shutdown](#graceful-shutdown)
-- [Full Example](#full-example)
+- [Full Examples](#full-examples)
 
 ---
 
@@ -31,7 +35,7 @@ npm install sockr-server
 `sockr-shared` is installed as a dependency. All shared types (`SocketEvent`, `User`, `ServerConfig`, etc.) are re-exported from `sockr-server` so you can import everything from a single package.
 
 ```typescript
-import { SockerServer, SocketEvent, User, ServerConfig } from "sockr-server";
+import { SocketServer, SocketEvent, User, ServerConfig } from "sockr-server";
 ```
 
 > For the full shared types reference, see the [sockr-shared Documentation](../shared/Documentation.md).
@@ -41,15 +45,103 @@ import { SockerServer, SocketEvent, User, ServerConfig } from "sockr-server";
 ## Quick Start
 
 ```typescript
-import { SockerServer } from "sockr-server";
+import { SocketServer } from "sockr-server";
 
-const server = new SockerServer();
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(async (token) => {
+    const user = await validateToken(token);
+    return user ? { id: user.id } : null;
+  })
+  .usePresence()
+  .useMessaging();
 
 await server.listen(3000);
-// Socket server listening on port 3000
 ```
 
-This starts a bare server with no plugins. Clients can connect, but there is no authentication, presence, or messaging until you enable them.
+---
+
+## Server Modes
+
+`SocketServer` supports three ways to initialize, depending on whether you have an existing server.
+
+> **Important:** You must call `attach()`, `attachToExpress()`, or `createStandalone()` before calling any plugin method (`useAuth`, `usePresence`, `useMessaging`). These methods require the Socket.IO instance to be initialized first.
+
+### Standalone
+
+Creates its own HTTP server. Use this when you don't have an existing server.
+
+```typescript
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await server.listen(3000);
+```
+
+If you call `listen()` without initializing first, it automatically calls `createStandalone()` for you:
+
+```typescript
+const server = new SocketServer();
+await server.listen(3000); // creates standalone server implicitly
+```
+
+> Note: In this case you cannot chain plugin methods before `listen()`, since the Socket.IO instance doesn't exist yet.
+
+### Attach to an Existing HTTP Server
+
+Use `attach()` when you already have an HTTP or HTTPS server (Express, Fastify, Koa, raw `http.createServer`, etc.).
+
+```typescript
+import express from "express";
+import { createServer } from "http";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+const httpServer = createServer(app);
+
+// Attach sockr to the existing server
+const sockr = new SocketServer()
+  .attach(httpServer)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging()
+  .initialize(); // initialize plugins
+
+// Express routes work as normal
+app.get("/health", (req, res) => res.send("ok"));
+
+// Start both on the same port
+httpServer.listen(3000);
+```
+
+When using `attach()`, the server is **not owned** by sockr. This means:
+- Call `listen()` on your HTTP server, not on sockr.
+- `sockr.close()` will close Socket.IO but will **not** close the HTTP server.
+- Call `initialize()` to initialize plugins after setting them up.
+
+### Attach to Express
+
+A convenience method that wraps your Express app in an HTTP server for you.
+
+```typescript
+import express from "express";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+
+const sockr = new SocketServer()
+  .attachToExpress(app)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await sockr.listen(3000);
+```
+
+With `attachToExpress()`, sockr **owns** the HTTP server, so you can call `sockr.listen()` and `sockr.close()` directly.
 
 ---
 
@@ -58,13 +150,12 @@ This starts a bare server with no plugins. Clients can connect, but there is no 
 Pass a `ServerConfig` object to the constructor to customize the server.
 
 ```typescript
-import { SockerServer } from "sockr-server";
-
-const server = new SockerServer({
+const server = new SocketServer({
   cors: {
     origin: "https://myapp.com",
     credentials: true,
   },
+  port: 8080,
   pingTimeout: 60000,
   pingInterval: 25000,
   transports: ["websocket", "polling"],
@@ -73,10 +164,13 @@ const server = new SockerServer({
 
 | Field           | Type                               | Default                          | Description                             |
 | --------------- | ---------------------------------- | -------------------------------- | --------------------------------------- |
+| `port`          | `number`                           | `3000`                           | Default port used by `listen()` if none is passed |
 | `cors`          | `{ origin: string \| string[]; credentials?: boolean }` | `{ origin: "*", credentials: true }` | CORS settings passed to Socket.IO |
 | `pingTimeout`   | `number`                           | `60000`                          | How long (ms) without a pong before closing the connection |
 | `pingInterval`  | `number`                           | `25000`                          | How often (ms) to send a ping           |
 | `transports`    | `("websocket" \| "polling")[]`     | `["websocket", "polling"]`       | Allowed transport methods               |
+
+The port used by `listen()` is resolved as: argument > `config.port` > `3000`.
 
 ---
 
@@ -85,7 +179,7 @@ const server = new SockerServer({
 Enable authentication by calling `useAuth()` with an `AuthHandler` function. The handler receives a token string and must return a `User` object on success or `null` to reject.
 
 ```typescript
-import { SockerServer, AuthHandler } from "sockr-server";
+import { SocketServer, AuthHandler } from "sockr-server";
 
 const authHandler: AuthHandler = async (token: string) => {
   // Look up the user by token — from a database, JWT decode, etc.
@@ -98,7 +192,8 @@ const authHandler: AuthHandler = async (token: string) => {
   return { id: user.id };
 };
 
-const server = new SockerServer()
+const server = new SocketServer()
+  .createStandalone()
   .useAuth(authHandler);
 
 await server.listen(3000);
@@ -152,7 +247,8 @@ socket.on("auth_error", (data) => {
 Enable presence to broadcast online/offline status and allow clients to query who is online.
 
 ```typescript
-const server = new SockerServer()
+const server = new SocketServer()
+  .createStandalone()
   .useAuth(authHandler)
   .usePresence();
 
@@ -166,7 +262,6 @@ await server.listen(3000);
 When a user authenticates, the server broadcasts to **all connected clients**:
 
 ```typescript
-// All clients receive:
 socket.on("user_online", (data) => {
   console.log(data.userId, "is now online");
   // { userId: string }
@@ -223,7 +318,8 @@ manager.getUsersOnlineStatus(["user-1", "user-2"]);
 Enable direct messaging between authenticated users.
 
 ```typescript
-const server = new SockerServer()
+const server = new SocketServer()
+  .createStandalone()
   .useAuth(authHandler)
   .useMessaging();
 
@@ -233,7 +329,6 @@ await server.listen(3000);
 ### Sending a Message
 
 ```typescript
-// Sender emits:
 socket.emit("send_message", {
   to: "recipient-user-id",
   content: "Hello!",
@@ -244,7 +339,6 @@ socket.emit("send_message", {
 ### Receiving a Message
 
 ```typescript
-// Recipient receives:
 socket.on("receive_message", (data) => {
   console.log(data);
   // {
@@ -260,7 +354,6 @@ socket.on("receive_message", (data) => {
 ### Delivery Confirmation
 
 ```typescript
-// Sender receives on successful delivery:
 socket.on("message_delivered", (data) => {
   console.log("Delivered:", data.messageId);
   // { messageId: string }
@@ -270,7 +363,6 @@ socket.on("message_delivered", (data) => {
 ### Message Errors
 
 ```typescript
-// Sender receives if something goes wrong:
 socket.on("message_error", (data) => {
   console.error(data.error);
   // { messageId?: string, error: string }
@@ -294,10 +386,7 @@ Typing indicators are part of the messaging plugin. Enable them by calling `useM
 ### Sending Typing State
 
 ```typescript
-// Notify recipient that you started typing:
 socket.emit("typing_start", { to: "recipient-user-id" });
-
-// Notify recipient that you stopped typing:
 socket.emit("typing_stop", { to: "recipient-user-id" });
 ```
 
@@ -344,13 +433,8 @@ const conn = manager.getConnectionByUserId("user-id");
 #### Manage Connections
 
 ```typescript
-// Register a connection
 manager.addConnection(connection);
-
-// Remove a connection and clean up user mapping
 manager.removeConnection("socket-id");
-
-// Authenticate a connection and map user ID to socket ID
 manager.authenticateConnection("socket-id", user);
 ```
 
@@ -417,7 +501,7 @@ Extend the abstract `Plugin` class to add custom behavior to the server.
 
 Every plugin must implement two methods:
 
-- `initialize()` — called once when `server.listen()` is invoked.
+- `initialize()` — called when plugins are initialized (via `listen()` or `initialize()`).
 - `handleConnection(socket)` — called for every new socket connection.
 
 ```typescript
@@ -433,12 +517,10 @@ class RateLimitPlugin extends Plugin {
   }
 
   initialize(): void {
-    // Setup that doesn't depend on individual sockets
     console.log("RateLimitPlugin initialized");
   }
 
   handleConnection(socket: Socket): void {
-    // Attach event listeners for each new connection
     socket.on("send_message", () => {
       const count = this.limits.get(socket.id) || 0;
       if (count > 100) {
@@ -457,10 +539,11 @@ class RateLimitPlugin extends Plugin {
 
 ### Registering a Custom Plugin
 
-Custom plugins need access to the `io` and `connectionManager` instances. Retrieve them from the server and register the plugin before calling `listen()`:
+Register custom plugins after initializing the server mode and before starting:
 
 ```typescript
-const server = new SockerServer()
+const server = new SocketServer()
+  .createStandalone()
   .useAuth(authHandler)
   .usePresence()
   .useMessaging();
@@ -474,10 +557,11 @@ await server.listen(3000);
 ### Plugin Lifecycle
 
 ```
-server = new SockerServer()       → Server created, connection handler set up
-server.use(plugin)                → Plugin added to the plugin array
-server.listen(port)               → plugin.initialize() called for each plugin
-                                  → HTTP server starts listening
+new SocketServer()                → Config stored, ConnectionManager created
+server.createStandalone()         → HTTP server + Socket.IO created, connection handler set up
+  (or server.attach(httpServer))
+server.useAuth() / use()          → Plugins registered
+server.listen() / initialize()    → plugin.initialize() called for each plugin
 client connects                   → plugin.handleConnection(socket) called for each plugin
 client disconnects                → socket 'disconnect' event fires (handle in your plugin)
 ```
@@ -545,18 +629,24 @@ Typing indicators **fail silently**. No error event is emitted if:
 - The sender is not authenticated.
 - The recipient is offline.
 
+### Initialization Errors
+
+| Scenario                                           | Error                                                                 |
+| -------------------------------------------------- | --------------------------------------------------------------------- |
+| Calling `useAuth`/`usePresence`/`useMessaging` before `attach`/`createStandalone` | `"Socket.IO server not initialized"` |
+| Calling `attach`/`createStandalone` twice          | `"Socket.IO server already initialized"`                              |
+| Calling `initialize()` before `attach`/`createStandalone` | `"Socket.IO server not initialized. Call attach() or createStandalone() first."` |
+
 ---
 
 ## Graceful Shutdown
 
 ```typescript
-const server = new SockerServer();
-await server.listen(3000);
-
-// Later, shut down cleanly:
 await server.close();
-// Closes all socket connections and the HTTP server
 ```
+
+- **Standalone / `attachToExpress`:** Closes Socket.IO and the HTTP server.
+- **`attach()`:** Closes Socket.IO only. The HTTP server is yours to manage.
 
 ### With Process Signals
 
@@ -569,51 +659,81 @@ process.on("SIGTERM", async () => {
 
 ---
 
-## Full Example
+## Full Examples
 
-A complete server with all features enabled:
+### Standalone Server
 
 ```typescript
-import { SockerServer, AuthHandler } from "sockr-server";
+import { SocketServer, AuthHandler } from "sockr-server";
 
-// Define your auth logic
 const authHandler: AuthHandler = async (token) => {
-  // Replace with your own validation (JWT, database lookup, etc.)
   const users: Record<string, { id: string }> = {
     "token-alice": { id: "alice" },
     "token-bob": { id: "bob" },
   };
-
   return users[token] || null;
 };
 
-// Create server with all plugins
-const server = new SockerServer({
+const server = new SocketServer({
   cors: { origin: "*" },
   transports: ["websocket"],
 })
+  .createStandalone()
   .useAuth(authHandler)
   .usePresence()
   .useMessaging();
 
-// Access internals if needed
-const manager = server.getConnectionManager();
-const io = server.getIO();
-
-// Listen for raw Socket.IO events via the io instance
-io.on("connection", (socket) => {
-  console.log("Raw connection event:", socket.id);
-});
-
-// Start the server
 await server.listen(3000);
-console.log("Server running on port 3000");
+```
 
-// Graceful shutdown
-process.on("SIGTERM", async () => {
-  await server.close();
-  process.exit(0);
+### Express Integration
+
+```typescript
+import express from "express";
+import { createServer } from "http";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+const httpServer = createServer(app);
+
+app.get("/health", (req, res) => res.send("ok"));
+app.get("/online", (req, res) => {
+  const users = sockr.getConnectionManager().getOnlineUsers();
+  res.json({ users });
 });
+
+const sockr = new SocketServer({ cors: { origin: "*" } })
+  .attach(httpServer)
+  .useAuth(async (token) => {
+    const user = await db.findUserByToken(token);
+    return user ? { id: user.id } : null;
+  })
+  .usePresence()
+  .useMessaging()
+  .initialize();
+
+httpServer.listen(3000, () => {
+  console.log("Express + SOCKR running on port 3000");
+});
+```
+
+### Express (Convenience Method)
+
+```typescript
+import express from "express";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+
+app.get("/health", (req, res) => res.send("ok"));
+
+const sockr = new SocketServer({ cors: { origin: "*" } })
+  .attachToExpress(app)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await sockr.listen(3000);
 ```
 
 ### Matching Client
@@ -641,7 +761,7 @@ socket.on("authenticated", (data) => {
     metadata: { type: "text" },
   });
 
-  // 4. Send typing indicator
+  // 4. Typing indicators
   socket.emit("typing_start", { to: "bob" });
   setTimeout(() => {
     socket.emit("typing_stop", { to: "bob" });
@@ -652,12 +772,12 @@ socket.on("auth_error", (data) => {
   console.error("Auth failed:", data.message);
 });
 
-// Listen for presence
+// Presence
 socket.on("user_online", (data) => console.log(data.userId, "online"));
 socket.on("user_offline", (data) => console.log(data.userId, "offline"));
 socket.on("online_status", (data) => console.log("Statuses:", data.statuses));
 
-// Listen for messages
+// Messages
 socket.on("receive_message", (data) => {
   console.log(`Message from ${data.from}: ${data.content}`);
 });
@@ -668,7 +788,7 @@ socket.on("message_error", (data) => {
   console.error("Message failed:", data.error);
 });
 
-// Listen for typing
+// Typing
 socket.on("typing_start", (data) => console.log(data.from, "is typing..."));
 socket.on("typing_stop", (data) => console.log(data.from, "stopped typing"));
 ```

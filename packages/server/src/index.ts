@@ -1,4 +1,4 @@
-export { SockerServer } from './core/SocketServer';
+export { SocketServer } from './core/SocketServer';
 export { Connection } from './core/Connection';
 export { ConnectionManager } from './core/ConnectionManager';
 export { Plugin } from './plugins/Plugin';
