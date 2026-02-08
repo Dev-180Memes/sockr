@@ -1,6 +1,7 @@
 {
   "name": "sockr-client",
   "version": "1.0.0",
+  "description": "Client-side websocket messaging with react hooks",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -11,10 +12,36 @@
       "import": "./dist/index.mjs"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dev-180Memes/sockr.git",
+    "directory": "packages/client"
+  },
+  "keywords": [
+    "websocket",
+    "socket.io",
+    "messaging",
+    "client",
+    "react",
+    "hooks",
+    "real-time",
+    "typescript"
+  ],
+  "author": "Adeoluwa Agbakosi <adeoluwaagbakosi@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "socket.io-client": "^4.8.3",
