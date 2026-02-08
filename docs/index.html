@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOCKR - Real-time WebSocket Messaging Framework</title>
+  <meta name="description" content="A type-safe WebSocket messaging framework with authentication, presence tracking, and React hooks. Built on Socket.IO.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo"><span>SOCKR</span></a>
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+      <ul class="navbar-links">
+        <li><a href="getting-started.html">Getting Started</a></li>
+        <li><a href="server.html">Server</a></li>
+        <li><a href="client.html">Client</a></li>
+        <li><a href="shared.html">Shared</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+        <a href="https://github.com/Dev-180Memes/sockr" class="github-link" aria-label="GitHub">
+          <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1><span>SOCKR</span></h1>
+    <p class="tagline">A type-safe WebSocket messaging framework with authentication, presence tracking, typing indicators, and React hooks.</p>
+    <div class="hero-install">
+      <code>npm install sockr-server sockr-client</code>
+    </div>
+    <div class="hero-buttons">
+      <a href="getting-started.html" class="btn btn-primary">Get Started &rarr;</a>
+      <a href="https://github.com/Dev-180Memes/sockr" class="btn btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <h2>Built for Real-time Apps</h2>
+    <p class="section-desc">Everything you need for person-to-person WebSocket communication, from authentication to typing indicators.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Real-time Messaging</h3>
+        <p>Send and receive messages instantly between authenticated users with delivery confirmation and error handling.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128274;</div>
+        <h3>Authentication</h3>
+        <p>Token-based authentication with a simple handler pattern. Validate tokens from JWT, database lookups, or any custom source.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128994;</div>
+        <h3>Presence Tracking</h3>
+        <p>Know who's online in real-time. Automatic broadcasts on connect/disconnect with batch status queries.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9999;&#65039;</div>
+        <h3>Typing Indicators</h3>
+        <p>Show when users are typing with automatic timeout handling. Built into both server and client SDKs.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9883;</div>
+        <h3>React Hooks</h3>
+        <p>7 purpose-built hooks for React apps: useSocket, useMessages, useSendMessage, usePresence, useTypingIndicator, and more.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128736;</div>
+        <h3>TypeScript First</h3>
+        <p>Full type safety across the entire stack. Shared types ensure server and client stay in sync at compile time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section class="architecture">
+    <div class="architecture-inner">
+      <h2>How It Works</h2>
+      <p class="section-desc">Three packages that work together. Shared types keep the server and client in sync.</p>
+      <div class="arch-diagram">
+        <a href="server.html" class="arch-package server">
+          <div class="arch-package-label">Server</div>
+          <div class="arch-package-name">sockr-server</div>
+          <div class="arch-package-desc">Plugin-based WebSocket server with auth, presence, and messaging</div>
+        </a>
+        <div class="arch-connector">
+          <span class="arrows">&larr; &rarr;</span>
+          <span>imports</span>
+        </div>
+        <a href="shared.html" class="arch-package shared">
+          <div class="arch-package-label">Shared</div>
+          <div class="arch-package-name">sockr-shared</div>
+          <div class="arch-package-desc">TypeScript types, event enums, and payload contracts</div>
+        </a>
+        <div class="arch-connector">
+          <span class="arrows">&larr; &rarr;</span>
+          <span>imports</span>
+        </div>
+        <a href="client.html" class="arch-package client">
+          <div class="arch-package-label">Client</div>
+          <div class="arch-package-name">sockr-client</div>
+          <div class="arch-package-desc">Client SDK with React hooks, reconnection, and state management</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Packages -->
+  <section class="packages">
+    <h2>Packages</h2>
+    <p class="section-desc">Install only what you need. Each package is published independently to npm.</p>
+    <div class="packages-grid">
+      <div class="package-card">
+        <h3>sockr-server</h3>
+        <span class="version">v1.1.0</span>
+        <p>Plugin-based WebSocket server built on Socket.IO. Authentication, presence, messaging, typing indicators, and a custom plugin system.</p>
+        <a href="server.html" class="card-link">View docs &rarr;</a>
+      </div>
+      <div class="package-card">
+        <h3>sockr-client</h3>
+        <span class="version">v1.0.0</span>
+        <p>Client SDK with React hooks for real-time messaging. SocketClient class works with or without React. Auto-reconnection with exponential backoff.</p>
+        <a href="client.html" class="card-link">View docs &rarr;</a>
+      </div>
+      <div class="package-card">
+        <h3>sockr-shared</h3>
+        <span class="version">v1.0.0</span>
+        <p>Shared TypeScript type definitions. Zero runtime dependencies. SocketEvent enum, EventPayloads, and all configuration interfaces.</p>
+        <a href="shared.html" class="card-link">View docs &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>MIT License &copy; 2025 Adeoluwa Agbakosi</p>
+      <ul class="footer-links">
+        <li><a href="https://github.com/Dev-180Memes/sockr">GitHub</a></li>
+        <li><a href="https://www.npmjs.com/search?q=sockr">npm</a></li>
+        <li><a href="getting-started.html">Docs</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</body>
+</html>

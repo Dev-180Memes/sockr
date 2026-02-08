@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server SDK - SOCKR</title>
+  <meta name="description" content="Complete reference for the sockr-server package — server modes, plugins, configuration, events, and connection management.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo"><span>SOCKR</span></a>
+      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
+      <ul class="navbar-links">
+        <li><a href="getting-started.html">Getting Started</a></li>
+        <li><a href="server.html" class="active">Server</a></li>
+        <li><a href="client.html">Client</a></li>
+        <li><a href="shared.html">Shared</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
+        <a href="https://github.com/Dev-180Memes/sockr" class="github-link" aria-label="GitHub">
+          <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="doc-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Getting Started</div>
+        <ul class="sidebar-links">
+          <li><a href="#installation">Installation</a></li>
+          <li><a href="#quick-start">Quick Start</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Server Modes</div>
+        <ul class="sidebar-links">
+          <li><a href="#standalone">Standalone</a></li>
+          <li><a href="#http-server">HTTP Server</a></li>
+          <li><a href="#express">Express</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Configuration</div>
+        <ul class="sidebar-links">
+          <li><a href="#server-configuration">Server Configuration</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Plugins</div>
+        <ul class="sidebar-links">
+          <li><a href="#authentication">Authentication</a></li>
+          <li><a href="#presence-tracking">Presence Tracking</a></li>
+          <li><a href="#messaging">Messaging</a></li>
+          <li><a href="#typing-indicators">Typing Indicators</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Advanced</div>
+        <ul class="sidebar-links">
+          <li><a href="#connection-management">Connection Management</a></li>
+          <li><a href="#custom-plugins">Custom Plugins</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Reference</div>
+        <ul class="sidebar-links">
+          <li><a href="#socket-events">Socket Events</a></li>
+          <li><a href="#error-handling">Error Handling</a></li>
+          <li><a href="#graceful-shutdown">Graceful Shutdown</a></li>
+          <li><a href="#full-examples">Full Examples</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="doc-content">
+      <div class="doc-content-inner">
+        <h1>Server SDK Reference</h1>
+        <p class="subtitle">Complete reference for the <code>sockr-server</code> package — server modes, plugins, configuration, and events.</p>
+
+        <!-- Installation -->
+        <h2 id="installation">Installation</h2>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>bash</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-bash">npm install sockr-server</code></pre>
+        </div>
+
+        <p><code>sockr-shared</code> is installed as a dependency. All shared types (<code>SocketEvent</code>, <code>User</code>, <code>ServerConfig</code>, etc.) are re-exported from <code>sockr-server</code> so you can import everything from a single package.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { SocketServer, SocketEvent, User, ServerConfig } from "sockr-server";</code></pre>
+        </div>
+
+        <p>For the full shared types reference, see the <a href="shared.html">sockr-shared documentation</a>.</p>
+
+        <!-- Quick Start -->
+        <h2 id="quick-start">Quick Start</h2>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { SocketServer } from "sockr-server";
+
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(async (token) =&gt; {
+    const user = await validateToken(token);
+    return user ? { id: user.id } : null;
+  })
+  .usePresence()
+  .useMessaging();
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <!-- Server Modes -->
+        <h2 id="server-modes">Server Modes</h2>
+
+        <p><code>SocketServer</code> supports three ways to initialize, depending on whether you have an existing server.</p>
+
+        <div class="callout callout-info">
+          <strong>Important:</strong> You must call <code>attach()</code>, <code>attachToExpress()</code>, or <code>createStandalone()</code> before calling any plugin method (<code>useAuth</code>, <code>usePresence</code>, <code>useMessaging</code>). These methods require the Socket.IO instance to be initialized first.
+        </div>
+
+        <h3 id="standalone">Standalone</h3>
+
+        <p>Creates its own HTTP server. Use this when you don't have an existing server.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <p>If you call <code>listen()</code> without initializing first, it automatically calls <code>createStandalone()</code> for you:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer();
+await server.listen(3000); // creates standalone server implicitly</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> In this case you cannot chain plugin methods before <code>listen()</code>, since the Socket.IO instance doesn't exist yet.
+        </div>
+
+        <h3 id="http-server">Attach to an Existing HTTP Server</h3>
+
+        <p>Use <code>attach()</code> when you already have an HTTP or HTTPS server (Express, Fastify, Koa, raw <code>http.createServer</code>, etc.).</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import express from "express";
+import { createServer } from "http";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+const httpServer = createServer(app);
+
+// Attach sockr to the existing server
+const sockr = new SocketServer()
+  .attach(httpServer)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging()
+  .initialize(); // initialize plugins
+
+// Express routes work as normal
+app.get("/health", (req, res) =&gt; res.send("ok"));
+
+// Start both on the same port
+httpServer.listen(3000);</code></pre>
+        </div>
+
+        <p>When using <code>attach()</code>, the server is <strong>not owned</strong> by sockr. This means:</p>
+        <ul>
+          <li>Call <code>listen()</code> on your HTTP server, not on sockr.</li>
+          <li><code>sockr.close()</code> will close Socket.IO but will <strong>not</strong> close the HTTP server.</li>
+          <li>Call <code>initialize()</code> to initialize plugins after setting them up.</li>
+        </ul>
+
+        <h3 id="express">Attach to Express</h3>
+
+        <p>A convenience method that wraps your Express app in an HTTP server for you.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import express from "express";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+
+const sockr = new SocketServer()
+  .attachToExpress(app)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await sockr.listen(3000);</code></pre>
+        </div>
+
+        <p>With <code>attachToExpress()</code>, sockr <strong>owns</strong> the HTTP server, so you can call <code>sockr.listen()</code> and <code>sockr.close()</code> directly.</p>
+
+        <!-- Server Configuration -->
+        <h2 id="server-configuration">Server Configuration</h2>
+
+        <p>Pass a <code>ServerConfig</code> object to the constructor to customize the server.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer({
+  cors: {
+    origin: "https://myapp.com",
+    credentials: true,
+  },
+  port: 8080,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ["websocket", "polling"],
+});</code></pre>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>port</code></td>
+              <td><code>number</code></td>
+              <td><code>3000</code></td>
+              <td>Default port used by <code>listen()</code> if none is passed</td>
+            </tr>
+            <tr>
+              <td><code>cors</code></td>
+              <td><code>{ origin: string | string[]; credentials?: boolean }</code></td>
+              <td><code>{ origin: "*", credentials: true }</code></td>
+              <td>CORS settings passed to Socket.IO</td>
+            </tr>
+            <tr>
+              <td><code>pingTimeout</code></td>
+              <td><code>number</code></td>
+              <td><code>60000</code></td>
+              <td>How long (ms) without a pong before closing the connection</td>
+            </tr>
+            <tr>
+              <td><code>pingInterval</code></td>
+              <td><code>number</code></td>
+              <td><code>25000</code></td>
+              <td>How often (ms) to send a ping</td>
+            </tr>
+            <tr>
+              <td><code>transports</code></td>
+              <td><code>("websocket" | "polling")[]</code></td>
+              <td><code>["websocket", "polling"]</code></td>
+              <td>Allowed transport methods</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>The port used by <code>listen()</code> is resolved as: argument &gt; <code>config.port</code> &gt; <code>3000</code>.</p>
+
+        <!-- Authentication -->
+        <h2 id="authentication">Authentication</h2>
+
+        <p>Enable authentication by calling <code>useAuth()</code> with an <code>AuthHandler</code> function. The handler receives a token string and must return a <code>User</code> object on success or <code>null</code> to reject.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { SocketServer, AuthHandler } from "sockr-server";
+
+const authHandler: AuthHandler = async (token: string) =&gt; {
+  // Look up the user by token — from a database, JWT decode, etc.
+  const user = await db.findUserByToken(token);
+
+  if (!user) return null; // Reject — client will be disconnected
+
+  // Return a User object. Only `id` is required from you.
+  // `socketId` and `connectedAt` are set automatically by the server.
+  return { id: user.id };
+};
+
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler);
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <h3>AuthHandler</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">type AuthHandler = (token: string) =&gt; Promise&lt;User | null&gt;;</code></pre>
+        </div>
+
+        <h3>How It Works</h3>
+
+        <ol>
+          <li>A client connects and emits an <code>authenticate</code> event with <code>{ token: string }</code>.</li>
+          <li>The server calls your <code>AuthHandler</code> with the token.</li>
+          <li><strong>If the handler returns a <code>User</code>:</strong>
+            <ul>
+              <li>The server sets <code>user.socketId</code> and <code>user.connectedAt</code> automatically.</li>
+              <li>The connection is marked as authenticated.</li>
+              <li>The client receives an <code>authenticated</code> event with <code>{ userId, socketId }</code>.</li>
+            </ul>
+          </li>
+          <li><strong>If the handler returns <code>null</code>:</strong>
+            <ul>
+              <li>The client receives an <code>auth_error</code> event with <code>{ message: "Invalid authentication token" }</code>.</li>
+              <li>The socket is disconnected.</li>
+            </ul>
+          </li>
+          <li><strong>If the handler throws an error:</strong>
+            <ul>
+              <li>The client receives an <code>auth_error</code> event with <code>{ message: "Authentication failed" }</code>.</li>
+              <li>The socket is disconnected.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>Client-Side Usage</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
+socket.emit("authenticate", { token: "my-auth-token" });
+
+socket.on("authenticated", (data) =&gt; {
+  console.log("Authenticated as", data.userId);
+  // { userId: string, socketId: string }
+});
+
+socket.on("auth_error", (data) =&gt; {
+  console.error("Auth failed:", data.message);
+  // { message: string }
+});</code></pre>
+        </div>
+
+        <!-- Presence Tracking -->
+        <h2 id="presence-tracking">Presence Tracking</h2>
+
+        <p>Enable presence to broadcast online/offline status and allow clients to query who is online.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .usePresence();
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> Presence requires authentication. A user is considered "online" once they have authenticated.
+        </div>
+
+        <h3>Automatic Broadcasts</h3>
+
+        <p>When a user authenticates, the server broadcasts to <strong>all connected clients</strong>:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("user_online", (data) =&gt; {
+  console.log(data.userId, "is now online");
+  // { userId: string }
+});</code></pre>
+        </div>
+
+        <p>When a user disconnects, the server broadcasts:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("user_offline", (data) =&gt; {
+  console.log(data.userId, "went offline");
+  // { userId: string }
+});</code></pre>
+        </div>
+
+        <h3>Querying Online Status</h3>
+
+        <p>Clients can request the status of specific users:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">// Client sends:
+socket.emit("get_online_status", {
+  userIds: ["user-1", "user-2", "user-3"],
+});
+
+// Client receives:
+socket.on("online_status", (data) =&gt; {
+  console.log(data.statuses);
+  // { "user-1": true, "user-2": false, "user-3": true }
+});</code></pre>
+        </div>
+
+        <h3>Server-Side Access</h3>
+
+        <p>You can also check presence programmatically on the server:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const manager = server.getConnectionManager();
+
+manager.isUserOnline("user-1");
+// true | false
+
+manager.getOnlineUsers();
+// ["user-1", "user-3"]
+
+manager.getUsersOnlineStatus(["user-1", "user-2"]);
+// { "user-1": true, "user-2": false }</code></pre>
+        </div>
+
+        <!-- Messaging -->
+        <h2 id="messaging">Messaging</h2>
+
+        <p>Enable direct messaging between authenticated users.</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .useMessaging();
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <h3>Sending a Message</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.emit("send_message", {
+  to: "recipient-user-id",
+  content: "Hello!",
+  metadata: { type: "text" }, // optional
+});</code></pre>
+        </div>
+
+        <h3>Receiving a Message</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("receive_message", (data) =&gt; {
+  console.log(data);
+  // {
+  //   from: "sender-user-id",
+  //   content: "Hello!",
+  //   timestamp: 1707300000000,
+  //   messageId: "550e8400-e29b-41d4-a716-446655440000",
+  //   metadata: { type: "text" }
+  // }
+});</code></pre>
+        </div>
+
+        <h3>Delivery Confirmation</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("message_delivered", (data) =&gt; {
+  console.log("Delivered:", data.messageId);
+  // { messageId: string }
+});</code></pre>
+        </div>
+
+        <h3>Message Errors</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("message_error", (data) =&gt; {
+  console.error(data.error);
+  // { messageId?: string, error: string }
+});</code></pre>
+        </div>
+
+        <p>Possible error messages:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Error</th>
+              <th>Cause</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>"Not authenticated"</code></td>
+              <td>Sender has not completed authentication</td>
+            </tr>
+            <tr>
+              <td><code>"Invalid user"</code></td>
+              <td>Sender's user ID could not be resolved</td>
+            </tr>
+            <tr>
+              <td><code>"Recipient is offline"</code></td>
+              <td>The recipient is not currently connected</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Typing Indicators -->
+        <h2 id="typing-indicators">Typing Indicators</h2>
+
+        <p>Typing indicators are part of the messaging plugin. Enable them by calling <code>useMessaging()</code>.</p>
+
+        <h3>Sending Typing State</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.emit("typing_start", { to: "recipient-user-id" });
+socket.emit("typing_stop", { to: "recipient-user-id" });</code></pre>
+        </div>
+
+        <h3>Receiving Typing State</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">socket.on("typing_start", (data) =&gt; {
+  console.log(data.from, "is typing...");
+  // { from: string }
+});
+
+socket.on("typing_stop", (data) =&gt; {
+  console.log(data.from, "stopped typing");
+  // { from: string }
+});</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <strong>Note:</strong> Typing indicators fail silently. If the sender is not authenticated or the recipient is offline, nothing happens — no error is emitted.
+        </div>
+
+        <!-- Connection Management -->
+        <h2 id="connection-management">Connection Management</h2>
+
+        <p>The <code>ConnectionManager</code> tracks all active connections with dual-map lookups by socket ID and user ID.</p>
+
+        <h3>Accessing the Manager</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const manager = server.getConnectionManager();</code></pre>
+        </div>
+
+        <h3>ConnectionManager Methods</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Returns</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>addConnection(connection)</code></td>
+              <td><code>void</code></td>
+              <td>Register a new connection</td>
+            </tr>
+            <tr>
+              <td><code>removeConnection(socketId)</code></td>
+              <td><code>void</code></td>
+              <td>Remove and clean up a connection</td>
+            </tr>
+            <tr>
+              <td><code>getConnection(socketId)</code></td>
+              <td><code>Connection | undefined</code></td>
+              <td>Look up a connection by socket ID</td>
+            </tr>
+            <tr>
+              <td><code>getConnectionByUserId(userId)</code></td>
+              <td><code>Connection | undefined</code></td>
+              <td>Look up a connection by user ID</td>
+            </tr>
+            <tr>
+              <td><code>authenticateConnection(socketId, user)</code></td>
+              <td><code>void</code></td>
+              <td>Authenticate a connection and map user ID</td>
+            </tr>
+            <tr>
+              <td><code>isUserOnline(userId)</code></td>
+              <td><code>boolean</code></td>
+              <td>Check if a user is currently connected</td>
+            </tr>
+            <tr>
+              <td><code>getOnlineUsers()</code></td>
+              <td><code>string[]</code></td>
+              <td>Get all online user IDs</td>
+            </tr>
+            <tr>
+              <td><code>getUsersOnlineStatus(userIds)</code></td>
+              <td><code>Record&lt;string, boolean&gt;</code></td>
+              <td>Batch status check for multiple users</td>
+            </tr>
+            <tr>
+              <td><code>getTotalConnections()</code></td>
+              <td><code>number</code></td>
+              <td>Count total active connections</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Working with a Connection</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const conn = manager.getConnectionByUserId("user-1");
+
+if (conn) {
+  conn.isAuth();        // true
+  conn.getUserId();     // "user-1"
+  conn.getUser();       // { id: "user-1", socketId: "abc", connectedAt: 1707300000000 }
+  conn.getSocketId();   // "abc"
+  conn.getSocket();     // Raw Socket.IO socket
+
+  // Send a custom event
+  conn.emit("custom-event", { hello: "world" });
+
+  // Kick the user
+  conn.disconnect();
+}</code></pre>
+        </div>
+
+        <h3>Connection Methods</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Returns</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>authenticate(user)</code></td>
+              <td><code>void</code></td>
+              <td>Mark the connection as authenticated</td>
+            </tr>
+            <tr>
+              <td><code>getUser()</code></td>
+              <td><code>User | null</code></td>
+              <td>Get the authenticated user</td>
+            </tr>
+            <tr>
+              <td><code>getUserId()</code></td>
+              <td><code>string | null</code></td>
+              <td>Get the user ID</td>
+            </tr>
+            <tr>
+              <td><code>getSocketId()</code></td>
+              <td><code>string</code></td>
+              <td>Get the socket ID</td>
+            </tr>
+            <tr>
+              <td><code>isAuth()</code></td>
+              <td><code>boolean</code></td>
+              <td>Check if authenticated</td>
+            </tr>
+            <tr>
+              <td><code>emit(event, data)</code></td>
+              <td><code>void</code></td>
+              <td>Send an event to the client</td>
+            </tr>
+            <tr>
+              <td><code>disconnect()</code></td>
+              <td><code>void</code></td>
+              <td>Disconnect the socket</td>
+            </tr>
+            <tr>
+              <td><code>getSocket()</code></td>
+              <td><code>Socket</code></td>
+              <td>Get the underlying Socket.IO socket</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Custom Plugins -->
+        <h2 id="custom-plugins">Custom Plugins</h2>
+
+        <p>Extend the abstract <code>Plugin</code> class to add custom behavior to the server.</p>
+
+        <h3>Plugin Interface</h3>
+
+        <p>Every plugin must implement two methods:</p>
+        <ul>
+          <li><code>initialize()</code> — called when plugins are initialized (via <code>listen()</code> or <code>initialize()</code>).</li>
+          <li><code>handleConnection(socket)</code> — called for every new socket connection.</li>
+        </ul>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { Plugin } from "sockr-server";
+import type { Server, Socket } from "socket.io";
+import type { ConnectionManager } from "sockr-server";
+
+class RateLimitPlugin extends Plugin {
+  private limits = new Map&lt;string, number&gt;();
+
+  constructor(io: Server, connectionManager: ConnectionManager) {
+    super(io, connectionManager);
+  }
+
+  initialize(): void {
+    console.log("RateLimitPlugin initialized");
+  }
+
+  handleConnection(socket: Socket): void {
+    socket.on("send_message", () =&gt; {
+      const count = this.limits.get(socket.id) || 0;
+      if (count &gt; 100) {
+        socket.emit("error", { message: "Rate limit exceeded" });
+        return;
+      }
+      this.limits.set(socket.id, count + 1);
+    });
+
+    socket.on("disconnect", () =&gt; {
+      this.limits.delete(socket.id);
+    });
+  }
+}</code></pre>
+        </div>
+
+        <h3>Registering a Custom Plugin</h3>
+
+        <p>Register custom plugins after initializing the server mode and before starting:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+const plugin = new RateLimitPlugin(server.getIO(), server.getConnectionManager());
+server.use(plugin);
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <h3>Plugin Lifecycle</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">new SocketServer()                // Config stored, ConnectionManager created
+server.createStandalone()         // HTTP server + Socket.IO created, connection handler set up
+  // (or server.attach(httpServer))
+server.useAuth() / use()          // Plugins registered
+server.listen() / initialize()    // plugin.initialize() called for each plugin
+client connects                   // plugin.handleConnection(socket) called for each plugin
+client disconnects                // socket 'disconnect' event fires (handle in your plugin)</code></pre>
+        </div>
+
+        <h3>Accessing Server Internals from Plugins</h3>
+
+        <p>Inside a plugin, you have access to two protected properties:</p>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">this.io                // Socket.IO Server instance — for broadcasting
+this.connectionManager // ConnectionManager — for looking up connections</code></pre>
+        </div>
+
+        <!-- Socket Events Reference -->
+        <h2 id="socket-events">Socket Events Reference</h2>
+
+        <h3>Client &rarr; Server</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Payload</th>
+              <th>Requires Auth</th>
+              <th>Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>authenticate</code></td>
+              <td><code>{ token: string }</code></td>
+              <td>No</td>
+              <td>Auth</td>
+            </tr>
+            <tr>
+              <td><code>get_online_status</code></td>
+              <td><code>{ userIds: string[] }</code></td>
+              <td>No</td>
+              <td>Presence</td>
+            </tr>
+            <tr>
+              <td><code>send_message</code></td>
+              <td><code>{ to: string, content: string, metadata?: object }</code></td>
+              <td>Yes</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>typing_start</code></td>
+              <td><code>{ to: string }</code></td>
+              <td>Yes</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>typing_stop</code></td>
+              <td><code>{ to: string }</code></td>
+              <td>Yes</td>
+              <td>Message</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Server &rarr; Client</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Payload</th>
+              <th>Recipient</th>
+              <th>Plugin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>authenticated</code></td>
+              <td><code>{ userId: string, socketId: string }</code></td>
+              <td>Sender</td>
+              <td>Auth</td>
+            </tr>
+            <tr>
+              <td><code>auth_error</code></td>
+              <td><code>{ message: string }</code></td>
+              <td>Sender</td>
+              <td>Auth</td>
+            </tr>
+            <tr>
+              <td><code>user_online</code></td>
+              <td><code>{ userId: string }</code></td>
+              <td>All clients</td>
+              <td>Presence</td>
+            </tr>
+            <tr>
+              <td><code>user_offline</code></td>
+              <td><code>{ userId: string }</code></td>
+              <td>All clients</td>
+              <td>Presence</td>
+            </tr>
+            <tr>
+              <td><code>online_status</code></td>
+              <td><code>{ statuses: Record&lt;string, boolean&gt; }</code></td>
+              <td>Sender</td>
+              <td>Presence</td>
+            </tr>
+            <tr>
+              <td><code>receive_message</code></td>
+              <td><code>{ from: string, content: string, timestamp: number, messageId: string, metadata?: object }</code></td>
+              <td>Recipient</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>message_delivered</code></td>
+              <td><code>{ messageId: string }</code></td>
+              <td>Sender</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>message_error</code></td>
+              <td><code>{ messageId?: string, error: string }</code></td>
+              <td>Sender</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>typing_start</code></td>
+              <td><code>{ from: string }</code></td>
+              <td>Recipient</td>
+              <td>Message</td>
+            </tr>
+            <tr>
+              <td><code>typing_stop</code></td>
+              <td><code>{ from: string }</code></td>
+              <td>Recipient</td>
+              <td>Message</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Error Handling -->
+        <h2 id="error-handling">Error Handling</h2>
+
+        <h3>Authentication Errors</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Event</th>
+              <th>Payload</th>
+              <th>Socket Disconnected</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>AuthHandler</code> returns <code>null</code></td>
+              <td><code>auth_error</code></td>
+              <td><code>{ message: "Invalid authentication token" }</code></td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td><code>AuthHandler</code> throws an error</td>
+              <td><code>auth_error</code></td>
+              <td><code>{ message: "Authentication failed" }</code></td>
+              <td>Yes</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Message Errors</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Event</th>
+              <th>Payload</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sender not authenticated</td>
+              <td><code>message_error</code></td>
+              <td><code>{ error: "Not authenticated" }</code></td>
+            </tr>
+            <tr>
+              <td>Sender user ID unresolved</td>
+              <td><code>message_error</code></td>
+              <td><code>{ error: "Invalid user" }</code></td>
+            </tr>
+            <tr>
+              <td>Recipient is offline</td>
+              <td><code>message_error</code></td>
+              <td><code>{ messageId: string, error: "Recipient is offline" }</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Typing Indicator Errors</h3>
+
+        <p>Typing indicators <strong>fail silently</strong>. No error event is emitted if:</p>
+        <ul>
+          <li>The sender is not authenticated.</li>
+          <li>The recipient is offline.</li>
+        </ul>
+
+        <h3>Initialization Errors</h3>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Calling <code>useAuth</code>/<code>usePresence</code>/<code>useMessaging</code> before <code>attach</code>/<code>createStandalone</code></td>
+              <td><code>"Socket.IO server not initialized"</code></td>
+            </tr>
+            <tr>
+              <td>Calling <code>attach</code>/<code>createStandalone</code> twice</td>
+              <td><code>"Socket.IO server already initialized"</code></td>
+            </tr>
+            <tr>
+              <td>Calling <code>initialize()</code> before <code>attach</code>/<code>createStandalone</code></td>
+              <td><code>"Socket.IO server not initialized. Call attach() or createStandalone() first."</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Graceful Shutdown -->
+        <h2 id="graceful-shutdown">Graceful Shutdown</h2>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">await server.close();</code></pre>
+        </div>
+
+        <ul>
+          <li><strong>Standalone / <code>attachToExpress</code>:</strong> Closes Socket.IO and the HTTP server.</li>
+          <li><strong><code>attach()</code>:</strong> Closes Socket.IO only. The HTTP server is yours to manage.</li>
+        </ul>
+
+        <h3>With Process Signals</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">process.on("SIGTERM", async () =&gt; {
+  await server.close();
+  process.exit(0);
+});</code></pre>
+        </div>
+
+        <!-- Full Examples -->
+        <h2 id="full-examples">Full Examples</h2>
+
+        <h3>Standalone Server</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { SocketServer, AuthHandler } from "sockr-server";
+
+const authHandler: AuthHandler = async (token) =&gt; {
+  const users: Record&lt;string, { id: string }&gt; = {
+    "token-alice": { id: "alice" },
+    "token-bob": { id: "bob" },
+  };
+  return users[token] || null;
+};
+
+const server = new SocketServer({
+  cors: { origin: "*" },
+  transports: ["websocket"],
+})
+  .createStandalone()
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await server.listen(3000);</code></pre>
+        </div>
+
+        <h3>Express Integration</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import express from "express";
+import { createServer } from "http";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+const httpServer = createServer(app);
+
+app.get("/health", (req, res) =&gt; res.send("ok"));
+app.get("/online", (req, res) =&gt; {
+  const users = sockr.getConnectionManager().getOnlineUsers();
+  res.json({ users });
+});
+
+const sockr = new SocketServer({ cors: { origin: "*" } })
+  .attach(httpServer)
+  .useAuth(async (token) =&gt; {
+    const user = await db.findUserByToken(token);
+    return user ? { id: user.id } : null;
+  })
+  .usePresence()
+  .useMessaging()
+  .initialize();
+
+httpServer.listen(3000, () =&gt; {
+  console.log("Express + SOCKR running on port 3000");
+});</code></pre>
+        </div>
+
+        <h3>Express (Convenience Method)</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import express from "express";
+import { SocketServer } from "sockr-server";
+
+const app = express();
+
+app.get("/health", (req, res) =&gt; res.send("ok"));
+
+const sockr = new SocketServer({ cors: { origin: "*" } })
+  .attachToExpress(app)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging();
+
+await sockr.listen(3000);</code></pre>
+        </div>
+
+        <h3>Matching Client</h3>
+
+        <div class="code-block">
+          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
+          <pre><code class="language-typescript">import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000", {
+  transports: ["websocket"],
+});
+
+// 1. Authenticate
+socket.emit("authenticate", { token: "token-alice" });
+
+socket.on("authenticated", (data) =&gt; {
+  console.log("Logged in as", data.userId);
+
+  // 2. Check who's online
+  socket.emit("get_online_status", { userIds: ["bob"] });
+
+  // 3. Send a message
+  socket.emit("send_message", {
+    to: "bob",
+    content: "Hey Bob!",
+    metadata: { type: "text" },
+  });
+
+  // 4. Typing indicators
+  socket.emit("typing_start", { to: "bob" });
+  setTimeout(() =&gt; {
+    socket.emit("typing_stop", { to: "bob" });
+  }, 2000);
+});
+
+socket.on("auth_error", (data) =&gt; {
+  console.error("Auth failed:", data.message);
+});
+
+// Presence
+socket.on("user_online", (data) =&gt; console.log(data.userId, "online"));
+socket.on("user_offline", (data) =&gt; console.log(data.userId, "offline"));
+socket.on("online_status", (data) =&gt; console.log("Statuses:", data.statuses));
+
+// Messages
+socket.on("receive_message", (data) =&gt; {
+  console.log(`Message from ${data.from}: ${data.content}`);
+});
+socket.on("message_delivered", (data) =&gt; {
+  console.log("Delivered:", data.messageId);
+});
+socket.on("message_error", (data) =&gt; {
+  console.error("Message failed:", data.error);
+});
+
+// Typing
+socket.on("typing_start", (data) =&gt; console.log(data.from, "is typing..."));
+socket.on("typing_stop", (data) =&gt; console.log(data.from, "stopped typing"));</code></pre>
+        </div>
+
+        <hr>
+
+        <h2>Next Steps</h2>
+
+        <ul>
+          <li><a href="client.html">Client SDK Reference</a> — SocketClient API, React hooks, reconnection, and error handling</li>
+          <li><a href="shared.html">Shared Types Reference</a> — SocketEvent enum, EventPayloads, and all TypeScript interfaces</li>
+        </ul>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</body>
+</html>
