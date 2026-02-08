@@ -52,7 +52,7 @@ import { SocketClient, SocketEvent, ClientConfig, ConnectionState } from "sockr-
 
 > For the full shared types reference, see the [sockr-shared Documentation](../shared/Documentation.md).
 
-**Peer dependency:** React 18+ is required for the React hooks. The core `SocketClient` class works without React.
+**Optional peer dependency:** React 16.8+ is needed for the React hooks. The core `SocketClient` class works without React.
 
 ---
 

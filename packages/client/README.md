@@ -8,7 +8,7 @@ A WebSocket client SDK with React hooks for real-time messaging, authentication,
 npm install sockr-client
 ```
 
-**Peer dependency:** React 18+ is required for the React hooks. The core `SocketClient` class works without React.
+**Optional peer dependency:** React 16.8+ is needed for the React hooks. The core `SocketClient` class works without React.
 
 ## Quick Start
 
