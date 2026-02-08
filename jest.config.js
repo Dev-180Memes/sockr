@@ -11,6 +11,7 @@ module.exports = {
   moduleNameMapper: {
     '^sockr-shared$': '<rootDir>/packages/shared/src/index.ts',
     '^sockr-server$': '<rootDir>/packages/server/src/index.ts',
+    '^sockr-client$': '<rootDir>/packages/client/src/index.ts',
   },
   coverageDirectory: '<rootDir>/coverage',
   coverageReporters: ['text', 'lcov', 'html'],
