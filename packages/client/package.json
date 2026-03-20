@@ -1,6 +1,6 @@
 {
   "name": "sockr-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Client-side websocket messaging with react hooks",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -8,6 +8,7 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "react-native": "./dist/index.mjs",
       "require": "./dist/index.js",
       "import": "./dist/index.mjs"
     }
