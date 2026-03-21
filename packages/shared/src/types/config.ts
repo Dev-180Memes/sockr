@@ -1,3 +1,7 @@
+import { ICacheProvider } from "../interfaces/ICacheProvider";
+import { IMessageStore } from "../interfaces/IMessageStore";
+import { IQueueProvider } from "../interfaces/IQueueProvider";
+
 export interface ServerConfig {
   port?: number;
   cors?: {
@@ -7,6 +11,11 @@ export interface ServerConfig {
   pingTimeout?: number;
   pingInterval?: number;
   transports?: ('websocket' | 'polling')[];
+  providers?: {
+    messageStore?: IMessageStore;
+    queue?: IQueueProvider;
+    cache?: ICacheProvider;
+  }
 }
 
 export interface ClientConfig {
