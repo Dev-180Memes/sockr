@@ -1,7 +1,6 @@
 {
   "name": "sockr",
   "version": "1.0.0",
-  "private": true,
   "description": "Person-to-person WebSocket messaging system",
   "scripts": {
     "dev": "pnpm --filter \"./packages/**\" --parallel dev",
