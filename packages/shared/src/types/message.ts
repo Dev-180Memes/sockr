@@ -21,7 +21,7 @@ export interface MessageOptions {
  */
 export interface PersistedMessage {
   id: string;
-  conservationId: string;
+  conversationId: string;
   from: string;
   to?: string; // set for 1:1 messages
   groupId?: string; // set for group messages

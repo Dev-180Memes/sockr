@@ -1,6 +1,6 @@
 {
   "name": "sockr-server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Server-side websocket messaging implementation",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -44,7 +44,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "socket.io": "^4.8.3",
-    "sockr-shared": "^1.0.0"
+    "sockr-shared": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

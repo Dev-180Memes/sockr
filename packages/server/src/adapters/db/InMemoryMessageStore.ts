@@ -68,8 +68,8 @@ export class InMemoryMessageStore implements IMessageStore {
   async getUndeliveredMessages(userId: string): Promise<PersistedMessage[]> {
     return Array.from(this.messages.values()).filter(
       (m) =>
-        (m.to === userId || m.deliveredTo.indexOf(userId) === -1) &&
-        (m.to === userId || (m.groupId !== undefined))
+        !m.deliveredTo.includes(userId) &&
+        (m.to === userId || m.groupId !== undefined)
     );
   }
 

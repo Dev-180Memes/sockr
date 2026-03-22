@@ -5,3 +5,7 @@ export { useMessages } from './hooks/useMessages';
 export { useSendMessage } from './hooks/useSendMessage';
 export { usePresence } from './hooks/usePresence';
 export { useTypingIndicator } from './hooks/useTypingIndicator';
+export { useGroup } from './hooks/useGroup';
+export { useGroupMessages } from './hooks/useGroupMessages';
+export { useGroupTyping } from './hooks/useGroupTyping';
+export { useUserGroups } from './hooks/useUserGroup';

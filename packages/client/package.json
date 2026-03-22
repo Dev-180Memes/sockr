@@ -1,6 +1,6 @@
 {
   "name": "sockr-client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Client-side websocket messaging with react hooks",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "socket.io-client": "^4.8.3",
-    "sockr-shared": "^1.0.0"
+    "sockr-shared": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=16.8.0"

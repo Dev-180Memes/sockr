@@ -6,8 +6,15 @@ import { Connection } from './Connection';
 import { AuthPlugin, AuthHandler } from '../plugins/AuthPlugin';
 import { PresencePlugin } from '../plugins/PresencePlugin';
 import { MessagePlugin } from '../plugins/MessagePlugin';
+import { GroupPlugin } from '../plugins/GroupPlugin';
 import { Plugin } from '../plugins/Plugin';
 import { ServerConfig } from 'sockr-shared';
+import {
+  resolveProviders,
+  connectProviders,
+  disconnectProviders,
+  ResolvedProviders,
+} from '../providers';
 
 type HTTPOrHTTPSServer = HTTPServer | HTTPSServer;
 
@@ -19,15 +26,14 @@ export class SocketServer {
   private authPlugin?: AuthPlugin;
   private presencePlugin?: PresencePlugin;
   private messagePlugin?: MessagePlugin;
+  private groupPlugin?: GroupPlugin;
   private config: ServerConfig;
-  private isOwnServer: boolean = false; // Track if we created the HTTP server
+  private providers: ResolvedProviders;
+  private isOwnServer: boolean = false;
 
   constructor(config: ServerConfig = {}) {
     this.config = {
-      cors: {
-        origin: '*',
-        credentials: true,
-      },
+      cors: { origin: '*', credentials: true },
       pingTimeout: 60000,
       pingInterval: 25000,
       transports: ['websocket', 'polling'],
@@ -35,42 +41,27 @@ export class SocketServer {
     };
 
     this.connectionManager = new ConnectionManager();
+    this.providers = resolveProviders(config.providers);
   }
 
-  /**
-   * Attach to an existing HTTP/HTTPS server
-   * Use this when you already have an Express/Fastify/etc server
-   */
-  public attach(httpServer: HTTPOrHTTPSServer): this {
-    if (this.io) {
-      throw new Error('Socket.IO server already initialized');
-    }
+  // ─── Server setup ──────────────────────────────────────────────────────────
 
+  public attach(httpServer: HTTPOrHTTPSServer): this {
+    if (this.io) throw new Error('Socket.IO server already initialized');
     this.httpServer = httpServer as HTTPServer;
     this.isOwnServer = false;
     this.initializeSocketIO(httpServer);
     return this;
   }
 
-  /**
-   * Attach to an Express app (creates HTTP server automatically)
-   * Convenience method for Express users
-   */
   public attachToExpress(app: any): this {
     const httpServer = createServer(app);
-    this.isOwnServer = true; // We created it, but Express will manage it
+    this.isOwnServer = true;
     return this.attach(httpServer);
   }
 
-  /**
-   * Create a standalone server (original behavior)
-   * Use this when you don't have an existing server
-   */
   public createStandalone(): this {
-    if (this.io) {
-      throw new Error('Socket.IO server already initialized');
-    }
-
+    if (this.io) throw new Error('Socket.IO server already initialized');
     this.httpServer = createServer();
     this.isOwnServer = true;
     this.initializeSocketIO(this.httpServer);
@@ -89,6 +80,8 @@ export class SocketServer {
     this.setupConnectionHandler();
   }
 
+  // ─── Plugin registration ───────────────────────────────────────────────────
+
   public useAuth(authHandler: AuthHandler): this {
     this.authPlugin = new AuthPlugin(this.getIO(), this.connectionManager, authHandler);
     this.plugins.push(this.authPlugin);
@@ -102,8 +95,22 @@ export class SocketServer {
   }
 
   public useMessaging(): this {
-    this.messagePlugin = new MessagePlugin(this.getIO(), this.connectionManager);
+    this.messagePlugin = new MessagePlugin(
+      this.getIO(),
+      this.connectionManager,
+      this.providers
+    );
     this.plugins.push(this.messagePlugin);
+    return this;
+  }
+
+  public useGroupMessaging(): this {
+    this.groupPlugin = new GroupPlugin(
+      this.getIO(),
+      this.connectionManager,
+      this.providers
+    );
+    this.plugins.push(this.groupPlugin);
     return this;
   }
 
@@ -112,6 +119,8 @@ export class SocketServer {
     return this;
   }
 
+  // ─── Connection handler ────────────────────────────────────────────────────
+
   private setupConnectionHandler(): void {
     const io = this.getIO();
 
@@ -119,113 +128,100 @@ export class SocketServer {
       const connection = new Connection(socket);
       this.connectionManager.addConnection(connection);
 
-      console.log(`New connection: ${socket.id}`);
+      console.log(`[Sockr] New connection: ${socket.id}`);
 
-      // Initialize all plugins for this connection
-      this.plugins.forEach((plugin) => {
-        plugin.handleConnection(socket);
-      });
+      // Initialise all plugins for this socket
+      this.plugins.forEach((plugin) => plugin.handleConnection(socket));
 
-      // Handle disconnection
-      socket.on('disconnect', () => {
+      // After successful authentication:
+      // 1. Broadcast user online
+      // 2. Flush queued 1:1 messages
+      // 3. Restore group room memberships + flush group queue
+      socket.on('authenticated', async () => {
         const userId = connection.getUserId();
-        console.log(`Disconnected: ${socket.id}${userId ? ` (${userId})` : ''}`);
+        if (!userId) return;
 
-        this.connectionManager.removeConnection(socket.id);
+        if (this.presencePlugin) {
+          this.presencePlugin.broadcastUserOnline(userId);
+        }
 
-        // Broadcast user offline if they were authenticated
-        if (userId && this.presencePlugin) {
-          this.presencePlugin.broadcastUserOffline(userId);
+        if (this.messagePlugin) {
+          await this.messagePlugin.flushQueuedMessages(userId, socket.id);
+        }
+
+        if (this.groupPlugin) {
+          await this.groupPlugin.restoreGroupMemberships(userId, socket.id);
         }
       });
 
-      // When user authenticates, broadcast they're online
-      socket.on('authenticated', () => {
+      socket.on('disconnect', () => {
         const userId = connection.getUserId();
-        if (userId && this.presencePlugin) {
-          this.presencePlugin.broadcastUserOnline(userId);
+        console.log(
+          `[Sockr] Disconnected: ${socket.id}${userId ? ` (${userId})` : ''}`
+        );
+
+        this.connectionManager.removeConnection(socket.id);
+
+        // Only broadcast offline if this was the user's last active socket
+        if (userId && !this.connectionManager.isUserOnline(userId)) {
+          if (this.presencePlugin) {
+            this.presencePlugin.broadcastUserOffline(userId);
+          }
         }
       });
     });
   }
 
-  /**
-   * Start listening on a port (only for standalone servers)
-   * If attached to existing server, that server should call listen()
-   */
-  public listen(port?: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // If no IO initialized, create standalone server
-      if (!this.io) {
-        this.createStandalone();
-      }
+  // ─── Lifecycle ─────────────────────────────────────────────────────────────
 
-      // If we didn't create the HTTP server, user should call listen on their server
-      if (!this.isOwnServer) {
-        console.warn(
-          'Socket server is attached to an existing HTTP server. ' +
-          'Call listen() on your HTTP server instead.'
-        );
-        // Still initialize plugins
-        this.plugins.forEach((plugin) => {
-          plugin.initialize();
-        });
-        return resolve();
-      }
+  public async listen(port?: number): Promise<void> {
+    if (!this.io) this.createStandalone();
 
-      if (!this.httpServer) {
-        return reject(new Error('HTTP server not initialized'));
-      }
+    // Connect all providers (no-op for in-memory, opens connections for DB/Redis)
+    await connectProviders(this.providers);
 
-      const listenPort = port || this.config.port || 3000;
+    this.plugins.forEach((plugin) => plugin.initialize());
 
-      // Initialize all plugins
-      this.plugins.forEach((plugin) => {
-        plugin.initialize();
-      });
+    if (!this.isOwnServer) {
+      console.warn(
+        '[Sockr] Attached to existing HTTP server. ' +
+        'Call listen() on your HTTP server instead of sockr.listen().'
+      );
+      return;
+    }
 
-      this.httpServer.listen(listenPort, () => {
-        console.log(`WebSocket server listening on port ${listenPort}`);
+    if (!this.httpServer) throw new Error('HTTP server not initialized');
+
+    const listenPort = port || this.config.port || 3000;
+
+    return new Promise((resolve) => {
+      this.httpServer!.listen(listenPort, () => {
+        console.log(`[Sockr] WebSocket server listening on port ${listenPort}`);
         resolve();
       });
     });
   }
 
-  /**
-   * Initialize plugins without starting a server
-   * Use this when attaching to an existing server that's already listening
-   */
-  public initialize(): this {
+  public async initialize(): Promise<this> {
     if (!this.io) {
-      throw new Error('Socket.IO server not initialized. Call attach() or createStandalone() first.');
+      throw new Error(
+        'Socket.IO not initialized. Call attach() or createStandalone() first.'
+      );
     }
 
-    this.plugins.forEach((plugin) => {
-      plugin.initialize();
-    });
-
+    await connectProviders(this.providers);
+    this.plugins.forEach((plugin) => plugin.initialize());
     return this;
   }
 
-  public getConnectionManager(): ConnectionManager {
-    return this.connectionManager;
-  }
+  public async close(): Promise<void> {
+    await disconnectProviders(this.providers);
 
-  public getIO(): Server {
-    if (!this.io) {
-      throw new Error('Socket.IO server not initialized');
-    }
-    return this.io;
-  }
-
-  public close(): Promise<void> {
     return new Promise((resolve) => {
       if (this.io) {
         this.io.close(() => {
           if (this.httpServer && this.isOwnServer) {
-            this.httpServer.close(() => {
-              resolve();
-            });
+            this.httpServer.close(() => resolve());
           } else {
             resolve();
           }
@@ -234,5 +230,20 @@ export class SocketServer {
         resolve();
       }
     });
+  }
+
+  // ─── Accessors ─────────────────────────────────────────────────────────────
+
+  public getConnectionManager(): ConnectionManager {
+    return this.connectionManager;
+  }
+
+  public getProviders(): ResolvedProviders {
+    return this.providers;
+  }
+
+  public getIO(): Server {
+    if (!this.io) throw new Error('Socket.IO server not initialized');
+    return this.io;
   }
 }

@@ -13,7 +13,6 @@ export const useSendMessage = (): UseSendMessageReturn => {
   const { client, isAuthenticated } = useSocket();
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pendingMessages, setPendingMessages] = useState<Set<string>>(new Set());
 
   const sendMessage = useCallback(
     (to: string, content: string, metadata?: Record<string, any>) => {

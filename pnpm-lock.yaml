@@ -33,8 +33,8 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
       sockr-shared:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@types/node':
         specifier: ^25.2.1
@@ -61,8 +61,8 @@ importers:
         specifier: ^4.8.3
         version: 4.8.3
       sockr-shared:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       '@types/express':
         specifier: ^5.0.6
@@ -1918,9 +1918,6 @@ packages:
   socket.io@4.8.3:
     resolution: {integrity: sha512-2Dd78bqzzjE6KPkD5fHZmDAKRNe3J15q+YHDrIsy9WEkqttc7GY+kT9OBLSMaPbQaEd0x1BjcmtMtXkfpc+T5A==}
     engines: {node: '>=10.2.0'}
-
-  sockr-shared@1.0.0:
-    resolution: {integrity: sha512-3jmLopNA6xLa3aGJGUkzP3mlwhGQu4o3uY7gWCx59e+TIis6xfX/Qy4qoulKMHMPbAkzB0hT6mOgui5mdrdscQ==}
 
   source-map-support@0.5.13:
     resolution: {integrity: sha512-SHSKFHadjVA5oR4PPqhtAVdcBWwRYVd6g6cAXnIbRiIwc2EhPrTuKUBdSLvlEKyIP3GCf89fltvcZiP9MMFA1w==}
@@ -4260,8 +4257,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-
-  sockr-shared@1.0.0: {}
 
   source-map-support@0.5.13:
     dependencies:

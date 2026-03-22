@@ -109,7 +109,8 @@ export interface EventPayloads {
   };
 
   [SocketEvent.MESSAGE_READ]: {
-    messageId: string
+    messageId: string;
+    from?: string;
   };
 
   [SocketEvent.MESSAGE_ERROR]: {
