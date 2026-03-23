@@ -1,0 +1,37 @@
+version: "3.9"
+
+# LiveKit SFU — reference setup for Sockr conference calling.
+#
+# Usage:
+#   LIVEKIT_API_KEY=devkey LIVEKIT_API_SECRET=devsecret docker compose up -d
+#
+# Then pass the same key/secret to LiveKitSFUProvider on the server and
+# the WebSocket URL (ws://localhost:7880) to useConference() on the client.
+#
+# For production, replace the key/secret with strong random values and
+# update livekit.yaml accordingly.
+
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    restart: unless-stopped
+    command: --config /etc/livekit/livekit.yaml --dev
+    ports:
+      # HTTP / WebSocket API
+      - "7880:7880"
+      # TCP media fallback
+      - "7881:7881/tcp"
+      # UDP media (RTP/RTCP)
+      - "7882:7882/udp"
+    volumes:
+      - ./livekit.yaml:/etc/livekit/livekit.yaml:ro
+    environment:
+      # Override key/secret from the environment so you don't have to edit livekit.yaml.
+      # These must match what you pass to LiveKitSFUProvider({ apiKey, apiSecret }).
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecret}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:7880/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

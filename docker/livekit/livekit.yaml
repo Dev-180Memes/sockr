@@ -1,0 +1,43 @@
+# LiveKit server configuration for local development / self-hosted deployments.
+# Reference: https://docs.livekit.io/home/self-hosting/configuration/
+#
+# Pass this file to the LiveKit container via the LIVEKIT_CONFIG env var or
+# the --config flag, e.g.:
+#   docker compose up
+# then point sockr at the same key/secret pair.
+
+port: 7880
+
+# ─── API keys ──────────────────────────────────────────────────────────────────
+# Format: <key>: <secret>
+# Use strong random values in production.
+keys:
+  devkey: devsecret
+
+# ─── RTC / WebRTC ──────────────────────────────────────────────────────────────
+rtc:
+  # UDP port range for media streams.
+  udp_port: 7882
+  # TCP fallback port.
+  tcp_port: 7881
+  # Set to your public IP when running behind NAT.
+  # nat_ip: ""
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level: info
+  pion_level: error
+
+# ─── Room defaults ────────────────────────────────────────────────────────────
+room:
+  # Automatically end an empty room after this many seconds.
+  empty_timeout: 300
+  # Maximum number of participants per room (0 = unlimited).
+  max_participants: 0
+
+# ─── TURN relay (optional) ────────────────────────────────────────────────────
+# LiveKit ships a built-in TURN server. Disable if you use your own Coturn.
+# turn:
+#   enabled: false
+#   domain: turn.yourdomain.com
+#   tls_port: 5349

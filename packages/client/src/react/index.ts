@@ -10,4 +10,6 @@ export { useGroupMessages } from './hooks/useGroupMessages';
 export { useGroupTyping } from './hooks/useGroupTyping';
 export { useUserGroups } from './hooks/useUserGroup';
 export { useVoiceCall } from './hooks/useVoiceCall';
-export type { UseVoiceCallReturn, CallState, IncomingCall } from './hooks/useVoiceCall';
+export type { UseVoiceCallReturn, UseVoiceCallOptions, CallState, IncomingCall } from './hooks/useVoiceCall';
+export { useConferenceCall } from './hooks/useConferenceCall';
+export type { UseConferenceCallReturn, UseConferenceCallOptions, ConferenceState, ConferenceCallParticipant } from './hooks/useConferenceCall';

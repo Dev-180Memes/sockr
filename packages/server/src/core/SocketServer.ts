@@ -8,8 +8,9 @@ import { PresencePlugin } from '../plugins/PresencePlugin';
 import { MessagePlugin } from '../plugins/MessagePlugin';
 import { GroupPlugin } from '../plugins/GroupPlugin';
 import { VoicePlugin } from '../plugins/VoicePlugin';
+import { ConferencePlugin } from '../plugins/ConferencePlugin';
 import { Plugin } from '../plugins/Plugin';
-import { ServerConfig } from 'sockr-shared';
+import { ServerConfig, ISFUProvider } from 'sockr-shared';
 import {
   resolveProviders,
   connectProviders,
@@ -29,6 +30,7 @@ export class SocketServer {
   private messagePlugin?: MessagePlugin;
   private groupPlugin?: GroupPlugin;
   private voicePlugin?: VoicePlugin;
+  private conferencePlugin?: ConferencePlugin;
   private config: ServerConfig;
   private providers: ResolvedProviders;
   private isOwnServer: boolean = false;
@@ -126,6 +128,21 @@ export class SocketServer {
     return this;
   }
 
+  public useConference(sfuProvider: ISFUProvider, sfuUrl: string): this {
+    if (!sfuProvider || typeof sfuProvider.generateToken !== 'function') {
+      throw new Error('[Sockr] useConference() requires a valid ISFUProvider instance.');
+    }
+    this.conferencePlugin = new ConferencePlugin(
+      this.getIO(),
+      this.connectionManager,
+      sfuProvider,
+      sfuUrl,
+      this.providers
+    );
+    this.plugins.push(this.conferencePlugin);
+    return this;
+  }
+
   public use(plugin: Plugin): this {
     this.plugins.push(plugin);
     return this;
@@ -166,7 +183,7 @@ export class SocketServer {
         }
       });
 
-      socket.on('disconnect', () => {
+      socket.on('disconnect', async () => {
         const userId = connection.getUserId();
         console.log(
           `[Sockr] Disconnected: ${socket.id}${userId ? ` (${userId})` : ''}`
@@ -181,6 +198,9 @@ export class SocketServer {
           }
           if (this.voicePlugin) {
             this.voicePlugin.cleanupCallsForUser(userId);
+          }
+          if (this.conferencePlugin) {
+            await this.conferencePlugin.cleanupParticipant(userId);
           }
         }
       });
