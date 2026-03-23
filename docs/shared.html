@@ -3,369 +3,321 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shared Types - SOCKR</title>
-  <meta name="description" content="Complete reference for the sockr-shared package — shared types, interfaces, and enums used across the SOCKR ecosystem.">
+  <title>Shared Types — Sockr</title>
+  <meta name="description" content="Full type reference for sockr-shared: SocketEvent enum, EventPayloads, all interfaces, and provider contracts.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/main.js"></script>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <a href="index.html" class="navbar-logo"><span>SOCKR</span></a>
-      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
-      <ul class="navbar-links">
-        <li><a href="getting-started.html">Getting Started</a></li>
-        <li><a href="server.html">Server</a></li>
-        <li><a href="client.html">Client</a></li>
-        <li><a href="shared.html" class="active">Shared</a></li>
-      </ul>
-      <div class="navbar-actions">
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
-        <a href="https://github.com/Dev-180Memes/sockr" class="github-link" aria-label="GitHub">
-          <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        </a>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="3.5" fill="#00CFFF"/><circle cx="16" cy="16" r="7" stroke="#00CFFF" stroke-width="1.2" stroke-opacity="0.5"/><circle cx="16" cy="16" r="11" stroke="#00CFFF" stroke-width="0.8" stroke-opacity="0.25"/><line x1="16" y1="5" x2="16" y2="1" stroke="#00CFFF" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7"/></svg>
       </div>
+      <span class="nav-logo-text">sockr<span>.</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="server.html">Server</a></li>
+      <li><a href="client.html">Client</a></li>
+      <li><a href="shared.html">Shared Types</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="https://github.com/Dev-180Memes/sockr" target="_blank" rel="noopener" class="nav-github">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-btn" title="Toggle theme">☀︎</button>
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
-  </nav>
+  </div>
+</nav>
+<div class="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting Started</a>
+  <a href="server.html">Server</a>
+  <a href="client.html">Client</a>
+  <a href="shared.html">Shared Types</a>
+  <a href="https://github.com/Dev-180Memes/sockr" target="_blank">GitHub ↗</a>
+</div>
 
-  <div class="doc-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-heading">Getting Started</div>
-        <ul class="sidebar-links">
-          <li><a href="#installation">Installation</a></li>
-          <li><a href="#usage">Usage</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-heading">Types</div>
-        <ul class="sidebar-links">
-          <li><a href="#user">User</a></li>
-          <li><a href="#userconnection">UserConnection</a></li>
-          <li><a href="#message">Message</a></li>
-          <li><a href="#messageoptions">MessageOptions</a></li>
-          <li><a href="#serverconfig">ServerConfig</a></li>
-          <li><a href="#clientconfig">ClientConfig</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-heading">Events</div>
-        <ul class="sidebar-links">
-          <li><a href="#socketevent-enum">SocketEvent Enum</a></li>
-          <li><a href="#eventpayloads">EventPayloads</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-heading">Payloads</div>
-        <ul class="sidebar-links">
-          <li><a href="#authentication-payloads">Authentication</a></li>
-          <li><a href="#presence-payloads">Presence</a></li>
-          <li><a href="#messaging-payloads">Messaging</a></li>
-          <li><a href="#typing-indicator-payloads">Typing Indicators</a></li>
-        </ul>
-      </div>
-    </aside>
+<div class="page-hero">
+  <span class="pkg-badge shared" style="margin-bottom:0.75rem;">sockr-shared@1.1.2</span>
+  <h1>Shared Types</h1>
+  <p>Zero-dependency TypeScript type definitions. The single source of truth for the Sockr protocol.</p>
+</div>
 
-    <!-- Content -->
-    <main class="doc-content">
-      <div class="doc-content-inner">
-        <h1>SOCKR Shared Types</h1>
-        <p class="subtitle">Complete reference for the sockr-shared package — shared types, interfaces, and enums used across the SOCKR ecosystem.</p>
+<div class="page-layout">
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Events</div>
+      <a href="#socket-event" class="sidebar-link">SocketEvent Enum</a>
+      <a href="#event-payloads" class="sidebar-link">EventPayloads</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Core Types</div>
+      <a href="#user-types" class="sidebar-link">User &amp; UserConnection</a>
+      <a href="#message-types" class="sidebar-link">Message Types</a>
+      <a href="#group-types" class="sidebar-link">Group Types</a>
+      <a href="#config-types" class="sidebar-link">Config Types</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Provider Interfaces</div>
+      <a href="#imessage-store" class="sidebar-link">IMessageStore</a>
+      <a href="#iqueue-provider" class="sidebar-link">IQueueProvider</a>
+      <a href="#icache-provider" class="sidebar-link">ICacheProvider</a>
+    </div>
+  </aside>
 
-        <h2 id="installation">Installation</h2>
+  <main class="doc-content">
+    <h1>Shared Types Reference</h1>
+    <p class="page-subtitle">Complete type reference for <code>sockr-shared</code>. Imported by both <code>sockr-server</code> and <code>sockr-client</code> — zero runtime dependencies.</p>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-bash">npm install sockr-shared</code></pre>
-        </div>
+    <div class="callout callout-info">
+      <strong>Single source of truth:</strong> The <code>SocketEvent</code> enum and <code>EventPayloads</code> interface define the entire Sockr protocol. Importing from <code>sockr-shared</code> ensures your server and client never drift out of sync.
+    </div>
 
-        <div class="callout callout-info">
-          <strong>Note:</strong> If you are using <code>sockr-server</code> or <code>sockr-client</code>, you do not need to install this package separately — all exports are re-exported from both packages.
-        </div>
+    <!-- SocketEvent -->
+    <h2 id="socket-event">SocketEvent Enum</h2>
+    <p>All 38 event strings used across the Sockr protocol. Import and use these everywhere instead of raw strings.</p>
+    <pre><code>import { SocketEvent } from 'sockr-shared';</code></pre>
 
-        <h2 id="usage">Usage</h2>
+    <h3>Connection</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">CONNECT</span><span class="enum-val">'connect'</span></div>
+      <div class="enum-item"><span class="enum-key">DISCONNECT</span><span class="enum-val">'disconnect'</span></div>
+      <div class="enum-item"><span class="enum-key">ERROR</span><span class="enum-val">'error'</span></div>
+    </div>
 
-        <p>Import any type, interface, or enum directly:</p>
+    <h3>Authentication</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">AUTHENTICATE</span><span class="enum-val">'authenticate'</span></div>
+      <div class="enum-item"><span class="enum-key">AUTHENTICATED</span><span class="enum-val">'authenticated'</span></div>
+      <div class="enum-item"><span class="enum-key">AUTH_ERROR</span><span class="enum-val">'auth_error'</span></div>
+    </div>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import {
-  SocketEvent,
-  EventPayloads,
-  User,
-  UserConnection,
-  Message,
-  MessageOptions,
-  ServerConfig,
-  ClientConfig,
-} from "sockr-shared";</code></pre>
-        </div>
+    <h3>Presence</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">USER_ONLINE</span><span class="enum-val">'user_online'</span></div>
+      <div class="enum-item"><span class="enum-key">USER_OFFLINE</span><span class="enum-val">'user_offline'</span></div>
+      <div class="enum-item"><span class="enum-key">GET_ONLINE_STATUS</span><span class="enum-val">'get_online_status'</span></div>
+      <div class="enum-item"><span class="enum-key">ONLINE_STATUS</span><span class="enum-val">'online_status'</span></div>
+    </div>
 
-        <p>Or from <code>sockr-server</code> if you already depend on it:</p>
+    <h3>Direct Messaging</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">SEND_MESSAGE</span><span class="enum-val">'send_message'</span></div>
+      <div class="enum-item"><span class="enum-key">RECEIVE_MESSAGE</span><span class="enum-val">'receive_message'</span></div>
+      <div class="enum-item"><span class="enum-key">MESSAGE_DELIVERED</span><span class="enum-val">'message_delivered'</span></div>
+      <div class="enum-item"><span class="enum-key">MESSAGE_READ</span><span class="enum-val">'message_read'</span></div>
+      <div class="enum-item"><span class="enum-key">MESSAGE_ERROR</span><span class="enum-val">'message_error'</span></div>
+      <div class="enum-item"><span class="enum-key">TYPING_START</span><span class="enum-val">'typing_start'</span></div>
+      <div class="enum-item"><span class="enum-key">TYPING_STOP</span><span class="enum-val">'typing_stop'</span></div>
+      <div class="enum-item"><span class="enum-key">GET_MESSAGE_HISTORY</span><span class="enum-val">'get_message_history'</span></div>
+      <div class="enum-item"><span class="enum-key">MESSAGE_HISTORY</span><span class="enum-val">'message_history'</span></div>
+    </div>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketEvent, User, ServerConfig } from "sockr-server";</code></pre>
-        </div>
+    <h3>Group Management</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">GROUP_CREATE</span><span class="enum-val">'group_create'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_CREATED</span><span class="enum-val">'group_created'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_CREATE_ERROR</span><span class="enum-val">'group_create_error'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_JOIN</span><span class="enum-val">'group_join'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_JOINED</span><span class="enum-val">'group_joined'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_JOIN_ERROR</span><span class="enum-val">'group_join_error'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_LEAVE</span><span class="enum-val">'group_leave'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_LEFT</span><span class="enum-val">'group_left'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MEMBER_JOINED</span><span class="enum-val">'group_member_joined'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MEMBER_LEFT</span><span class="enum-val">'group_member_left'</span></div>
+      <div class="enum-item"><span class="enum-key">GET_GROUP_MEMBERS</span><span class="enum-val">'get_group_members'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MEMBERS</span><span class="enum-val">'group_members'</span></div>
+      <div class="enum-item"><span class="enum-key">GET_USER_GROUPS</span><span class="enum-val">'get_user_groups'</span></div>
+      <div class="enum-item"><span class="enum-key">USER_GROUPS</span><span class="enum-val">'user_groups'</span></div>
+    </div>
 
-        <hr>
+    <h3>Group Messaging</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">GROUP_SEND_MESSAGE</span><span class="enum-val">'group_send_message'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_RECEIVE_MESSAGE</span><span class="enum-val">'group_receive_message'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MESSAGE_DELIVERED</span><span class="enum-val">'group_message_delivered'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MESSAGE_READ</span><span class="enum-val">'group_message_read'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MESSAGE_ERROR</span><span class="enum-val">'group_message_error'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_TYPING_START</span><span class="enum-val">'group_typing_start'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_TYPING_STOP</span><span class="enum-val">'group_typing_stop'</span></div>
+      <div class="enum-item"><span class="enum-key">GET_GROUP_MESSAGE_HISTORY</span><span class="enum-val">'get_group_message_history'</span></div>
+      <div class="enum-item"><span class="enum-key">GROUP_MESSAGE_HISTORY</span><span class="enum-val">'group_message_history'</span></div>
+    </div>
 
-        <h2 id="types">Types</h2>
+    <!-- EventPayloads -->
+    <h2 id="event-payloads">EventPayloads Interface</h2>
+    <p>Maps every <code>SocketEvent</code> to its typed payload. Used internally by <code>SocketClient</code> and <code>SocketServer</code> for type-safe emit/listen.</p>
+    <pre><code>import { EventPayloads, SocketEvent } from 'sockr-shared';
 
-        <h3 id="user">User</h3>
+// Example: type-safe event handler
+const handler = (data: EventPayloads[SocketEvent.RECEIVE_MESSAGE]) => {
+  console.log(data.from, data.content, data.timestamp);
+};</code></pre>
 
-        <p>Represents an authenticated user attached to a socket connection.</p>
+    <pre><code>interface EventPayloads {
+  // Auth
+  authenticate:          { token: string };
+  authenticated:         { userId: string; socketId: string };
+  auth_error:            { message: string };
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface User {
-  id: string;
-  socketId: string;
-  connectedAt: number;
+  // Presence
+  user_online:           { userId: string };
+  user_offline:          { userId: string };
+  get_online_status:     { userIds: string[] };
+  online_status:         { statuses: Record&lt;string, boolean&gt; };
+
+  // Direct messaging
+  send_message:          { to: string; content: string; metadata?: Record&lt;string, any&gt; };
+  receive_message:       { from: string; content: string; timestamp: number; messageId: string; metadata?: Record&lt;string, any&gt; };
+  message_delivered:     { messageId: string };
+  message_read:          { messageId: string; from?: string };
+  message_error:         { messageId: string; error: string };
+  typing_start:          { from: string };
+  typing_stop:           { from: string };
+  get_message_history:   { with: string; limit?: number; before?: number };
+  message_history:       { conversationId: string; messages: PersistedMessage[] };
+
+  // Group management
+  group_create:          { name: string; members?: string[]; metadata?: Record&lt;string, any&gt; };
+  group_created:         { group: Group };
+  group_create_error:    { error: string };
+  group_join:            { groupId: string };
+  group_joined:          { groupId: string; group: Group; queuedMessages?: PersistedMessage[] };
+  group_join_error:      { groupId: string; error: string };
+  group_leave:           { groupId: string };
+  group_left:            { groupId: string };
+  group_member_joined:   { groupId: string; member: GroupMember };
+  group_member_left:     { groupId: string; userId: string };
+  get_group_members:     { groupId: string };
+  group_members:         { groupId: string; members: GroupMember[] };
+  get_user_groups:       Record&lt;string, never&gt;;
+  user_groups:           { groups: Group[] };
+
+  // Group messaging
+  group_send_message:         { groupId: string; content: string; metadata?: Record&lt;string, any&gt; };
+  group_receive_message:      { groupId: string; messageId: string; from: string; content: string; timestamp: number; metadata?: Record&lt;string, any&gt; };
+  group_message_delivered:    { groupId: string; messageId: string };
+  group_message_read:         { groupId: string; messageId: string };
+  group_message_error:        { groupId: string; messageId?: string; error: string };
+  group_typing_start:         { groupId: string; from: string };
+  group_typing_stop:          { groupId: string; from: string };
+  get_group_message_history:  { groupId: string; limit?: number; before?: number };
+  group_message_history:      { groupId: string; messages: PersistedMessage[] };
+}</code></pre>
+
+    <!-- User Types -->
+    <h2 id="user-types">User &amp; UserConnection</h2>
+
+    <h3>User</h3>
+    <p>Represents an authenticated connected user. Used internally by <code>ConnectionManager</code>.</p>
+    <pre><code>interface User {
+  id: string;           // The authenticated userId (from AuthHandler)
+  socketId: string;     // Socket.IO socket ID for this connection
+  connectedAt: number;  // Unix timestamp (ms) when connected
   metadata?: Record&lt;string, any&gt;;
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>id</code></td>
-              <td><code>string</code></td>
-              <td>Unique user identifier. You provide this in your auth handler.</td>
-            </tr>
-            <tr>
-              <td><code>socketId</code></td>
-              <td><code>string</code></td>
-              <td>The Socket.IO socket ID. Set automatically by the server.</td>
-            </tr>
-            <tr>
-              <td><code>connectedAt</code></td>
-              <td><code>number</code></td>
-              <td>Unix timestamp (ms) of when the user authenticated. Set by server.</td>
-            </tr>
-            <tr>
-              <td><code>metadata</code></td>
-              <td><code>Record&lt;string, any&gt;</code></td>
-              <td>Optional. Arbitrary data you can attach to the user.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p><strong>Example:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const user: User = {
-  id: "user-123",
-  socketId: "abc123",
-  connectedAt: Date.now(),
-  metadata: { role: "admin" },
-};</code></pre>
-        </div>
-
-        <hr>
-
-        <h3 id="userconnection">UserConnection</h3>
-
-        <p>Describes a user's connection state. Useful for representing presence data.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface UserConnection {
+    <h3>UserConnection</h3>
+    <p>A lightweight snapshot of a user's connection state.</p>
+    <pre><code>interface UserConnection {
   userId: string;
   socketId: string;
   isOnline: boolean;
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>userId</code></td>
-              <td><code>string</code></td>
-              <td>The user's ID.</td>
-            </tr>
-            <tr>
-              <td><code>socketId</code></td>
-              <td><code>string</code></td>
-              <td>The Socket.IO socket ID.</td>
-            </tr>
-            <tr>
-              <td><code>isOnline</code></td>
-              <td><code>boolean</code></td>
-              <td>Whether the user is connected.</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- Message Types -->
+    <h2 id="message-types">Message Types</h2>
 
-        <p><strong>Example:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const connection: UserConnection = {
-  userId: "user-123",
-  socketId: "abc123",
-  isOnline: true,
-};</code></pre>
-        </div>
-
-        <hr>
-
-        <h3 id="message">Message</h3>
-
-        <p>Represents a complete message with delivery status.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface Message {
+    <h3>Message</h3>
+    <p>In-flight message shape (before persistence).</p>
+    <pre><code>interface Message {
   id: string;
-  from: string;
-  to: string;
+  from: string;      // sender userId
+  to: string;        // recipient userId
   content: string;
-  timestamp: number;
+  timestamp: number; // Unix timestamp (ms)
   delivered: boolean;
   metadata?: Record&lt;string, any&gt;;
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>id</code></td>
-              <td><code>string</code></td>
-              <td>Unique message ID (UUID).</td>
-            </tr>
-            <tr>
-              <td><code>from</code></td>
-              <td><code>string</code></td>
-              <td>Sender's user ID.</td>
-            </tr>
-            <tr>
-              <td><code>to</code></td>
-              <td><code>string</code></td>
-              <td>Recipient's user ID.</td>
-            </tr>
-            <tr>
-              <td><code>content</code></td>
-              <td><code>string</code></td>
-              <td>Message body.</td>
-            </tr>
-            <tr>
-              <td><code>timestamp</code></td>
-              <td><code>number</code></td>
-              <td>Unix timestamp (ms) of when it was sent.</td>
-            </tr>
-            <tr>
-              <td><code>delivered</code></td>
-              <td><code>boolean</code></td>
-              <td>Whether the message was delivered.</td>
-            </tr>
-            <tr>
-              <td><code>metadata</code></td>
-              <td><code>Record&lt;string, any&gt;</code></td>
-              <td>Optional. Arbitrary data attached to the message.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p><strong>Example:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const message: Message = {
-  id: "550e8400-e29b-41d4-a716-446655440000",
-  from: "alice",
-  to: "bob",
-  content: "Hello!",
-  timestamp: Date.now(),
-  delivered: true,
-  metadata: { type: "text" },
-};</code></pre>
-        </div>
-
-        <hr>
-
-        <h3 id="messageoptions">MessageOptions</h3>
-
-        <p>Options for controlling message delivery behavior.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface MessageOptions {
-  requireAcknowledgment?: boolean;
-  timeout?: number;
+    <h3>PersistedMessage</h3>
+    <p>The unified persisted message shape used by <code>IMessageStore</code>. Handles both 1:1 and group messages.</p>
+    <pre><code>interface PersistedMessage {
+  id: string;
+  conversationId: string; // "${userA}:${userB}" (sorted) for 1:1
+                          // groupId for group messages
+  from: string;
+  to?: string;            // set for 1:1 messages
+  groupId?: string;       // set for group messages
+  content: string;
+  timestamp: number;      // Unix timestamp (ms)
+  metadata?: Record&lt;string, any&gt;;
+  deliveredTo: string[];  // userIds message was delivered to
+  readBy: string[];       // userIds who have read the message
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>requireAcknowledgment</code></td>
-              <td><code>boolean</code></td>
-              <td>Optional. Whether to require delivery confirmation.</td>
-            </tr>
-            <tr>
-              <td><code>timeout</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Timeout in milliseconds.</td>
-            </tr>
-          </tbody>
-        </table>
+    <h3>MessageOptions</h3>
+    <pre><code>interface MessageOptions {
+  requireAcknowledgment?: boolean;
+  timeout?: number; // ms
+}</code></pre>
 
-        <p><strong>Example:</strong></p>
+    <h3>PaginationOpts</h3>
+    <p>Used by <code>IMessageStore.getMessages()</code> and passed through <code>get_message_history</code> / <code>get_group_message_history</code> events.</p>
+    <pre><code>interface PaginationOpts {
+  limit: number;
+  before?: number; // Unix timestamp — fetch messages before this time
+  after?: number;  // Unix timestamp — fetch messages after this time
+}</code></pre>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const options: MessageOptions = {
-  requireAcknowledgment: true,
-  timeout: 5000,
-};</code></pre>
-        </div>
+    <!-- Group Types -->
+    <h2 id="group-types">Group Types</h2>
 
-        <hr>
+    <h3>Group</h3>
+    <pre><code>interface Group {
+  id: string;
+  name: string;
+  createdBy: string;  // userId of the creator
+  createdAt: number;  // Unix timestamp (ms)
+  members: string[];  // array of userIds
+  metadata?: Record&lt;string, any&gt;;
+}</code></pre>
 
-        <h3 id="serverconfig">ServerConfig</h3>
+    <h3>GroupMember</h3>
+    <pre><code>type GroupMemberRole = 'admin' | 'member';
 
-        <p>Configuration for the SOCKR server.</p>
+interface GroupMember {
+  userId: string;
+  role: GroupMemberRole; // 'admin' | 'member'
+  joinedAt: number;      // Unix timestamp (ms)
+}</code></pre>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface ServerConfig {
+    <h3>GroupMessage</h3>
+    <pre><code>interface GroupMessage {
+  id: string;
+  groupId: string;
+  from: string;      // sender userId
+  content: string;
+  timestamp: number; // Unix timestamp (ms)
+  metadata?: Record&lt;string, any&gt;;
+  deliveredTo: string[]; // userIds message was delivered to
+  readBy: string[];      // userIds who have read the message
+}</code></pre>
+
+    <!-- Config Types -->
+    <h2 id="config-types">Config Types</h2>
+
+    <h3>ServerConfig</h3>
+    <pre><code>interface ServerConfig {
   port?: number;
   cors?: {
     origin: string | string[];
@@ -373,599 +325,144 @@
   };
   pingTimeout?: number;
   pingInterval?: number;
-  transports?: ("websocket" | "polling")[];
+  transports?: ('websocket' | 'polling')[];
+  providers?: {
+    messageStore?: IMessageStore;
+    queue?: IQueueProvider;
+    cache?: ICacheProvider;
+  };
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>port</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Server port number.</td>
-            </tr>
-            <tr>
-              <td><code>cors</code></td>
-              <td><code>object</code></td>
-              <td>Optional. CORS configuration.</td>
-            </tr>
-            <tr>
-              <td><code>cors.origin</code></td>
-              <td><code>string | string[]</code></td>
-              <td>Allowed origin(s).</td>
-            </tr>
-            <tr>
-              <td><code>cors.credentials</code></td>
-              <td><code>boolean</code></td>
-              <td>Optional. Whether to allow credentials.</td>
-            </tr>
-            <tr>
-              <td><code>pingTimeout</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Ping timeout in milliseconds.</td>
-            </tr>
-            <tr>
-              <td><code>pingInterval</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Ping interval in milliseconds.</td>
-            </tr>
-            <tr>
-              <td><code>transports</code></td>
-              <td><code>("websocket" | "polling")[]</code></td>
-              <td>Optional. Allowed transport methods.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p><strong>Example:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const config: ServerConfig = {
-  cors: {
-    origin: ["https://myapp.com", "https://admin.myapp.com"],
-    credentials: true,
-  },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  transports: ["websocket"],
-};</code></pre>
-        </div>
-
-        <hr>
-
-        <h3 id="clientconfig">ClientConfig</h3>
-
-        <p>Configuration for a SOCKR client connection.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">interface ClientConfig {
+    <h3>ClientConfig</h3>
+    <pre><code>interface ClientConfig {
   url: string;
   autoConnect?: boolean;
   reconnection?: boolean;
   reconnectionAttempts?: number;
   reconnectionDelay?: number;
   timeout?: number;
-  transports?: ("websocket" | "polling")[];
+  transports?: ('websocket' | 'polling')[];
 }</code></pre>
-        </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Field</th>
-              <th>Type</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>url</code></td>
-              <td><code>string</code></td>
-              <td><strong>Required.</strong> Server URL to connect to.</td>
-            </tr>
-            <tr>
-              <td><code>autoConnect</code></td>
-              <td><code>boolean</code></td>
-              <td>Optional. Connect immediately on creation.</td>
-            </tr>
-            <tr>
-              <td><code>reconnection</code></td>
-              <td><code>boolean</code></td>
-              <td>Optional. Enable automatic reconnection.</td>
-            </tr>
-            <tr>
-              <td><code>reconnectionAttempts</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Max number of reconnection attempts.</td>
-            </tr>
-            <tr>
-              <td><code>reconnectionDelay</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Delay (ms) between attempts.</td>
-            </tr>
-            <tr>
-              <td><code>timeout</code></td>
-              <td><code>number</code></td>
-              <td>Optional. Connection timeout in milliseconds.</td>
-            </tr>
-            <tr>
-              <td><code>transports</code></td>
-              <td><code>("websocket" | "polling")[]</code></td>
-              <td>Optional. Allowed transport methods.</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- IMessageStore -->
+    <h2 id="imessage-store">IMessageStore</h2>
+    <p>Persistence contract for all messages and group metadata. Implement this interface to use any database with Sockr.</p>
+    <pre><code>import type { IMessageStore } from 'sockr-shared';
 
-        <p><strong>Example:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const config: ClientConfig = {
-  url: "http://localhost:3000",
-  autoConnect: true,
-  reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  timeout: 10000,
-  transports: ["websocket"],
-};</code></pre>
-        </div>
-
-        <hr>
-
-        <h2 id="socketevent-enum">SocketEvent Enum</h2>
-
-        <p>All event names used in the SOCKR protocol. Use these instead of raw strings for type safety.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">enum SocketEvent {
-  // Connection
-  CONNECT = "connect",
-  DISCONNECT = "disconnect",
-  ERROR = "error",
-
-  // Authentication
-  AUTHENTICATE = "authenticate",
-  AUTHENTICATED = "authenticated",
-  AUTH_ERROR = "auth_error",
-
-  // Presence
-  USER_ONLINE = "user_online",
-  USER_OFFLINE = "user_offline",
-  GET_ONLINE_STATUS = "get_online_status",
-  ONLINE_STATUS = "online_status",
-
-  // Messaging
-  SEND_MESSAGE = "send_message",
-  RECEIVE_MESSAGE = "receive_message",
-  MESSAGE_DELIVERED = "message_delivered",
-  MESSAGE_ERROR = "message_error",
-  TYPING_START = "typing_start",
-  TYPING_STOP = "typing_stop",
-}</code></pre>
-        </div>
-
-        <h3>Connection Events</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Enum Value</th>
-              <th>String Value</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>CONNECT</code></td>
-              <td><code>"connect"</code></td>
-              <td>Socket connected.</td>
-            </tr>
-            <tr>
-              <td><code>DISCONNECT</code></td>
-              <td><code>"disconnect"</code></td>
-              <td>Socket disconnected.</td>
-            </tr>
-            <tr>
-              <td><code>ERROR</code></td>
-              <td><code>"error"</code></td>
-              <td>General error.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Authentication Events</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Enum Value</th>
-              <th>String Value</th>
-              <th>Direction</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>AUTHENTICATE</code></td>
-              <td><code>"authenticate"</code></td>
-              <td>Client &rarr; Server</td>
-              <td>Client sends auth token.</td>
-            </tr>
-            <tr>
-              <td><code>AUTHENTICATED</code></td>
-              <td><code>"authenticated"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Auth succeeded.</td>
-            </tr>
-            <tr>
-              <td><code>AUTH_ERROR</code></td>
-              <td><code>"auth_error"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Auth failed.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Presence Events</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Enum Value</th>
-              <th>String Value</th>
-              <th>Direction</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>USER_ONLINE</code></td>
-              <td><code>"user_online"</code></td>
-              <td>Server &rarr; All</td>
-              <td>A user came online.</td>
-            </tr>
-            <tr>
-              <td><code>USER_OFFLINE</code></td>
-              <td><code>"user_offline"</code></td>
-              <td>Server &rarr; All</td>
-              <td>A user went offline.</td>
-            </tr>
-            <tr>
-              <td><code>GET_ONLINE_STATUS</code></td>
-              <td><code>"get_online_status"</code></td>
-              <td>Client &rarr; Server</td>
-              <td>Request batch online status.</td>
-            </tr>
-            <tr>
-              <td><code>ONLINE_STATUS</code></td>
-              <td><code>"online_status"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Response with online status map.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Messaging Events</h3>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Enum Value</th>
-              <th>String Value</th>
-              <th>Direction</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>SEND_MESSAGE</code></td>
-              <td><code>"send_message"</code></td>
-              <td>Client &rarr; Server</td>
-              <td>Send a direct message.</td>
-            </tr>
-            <tr>
-              <td><code>RECEIVE_MESSAGE</code></td>
-              <td><code>"receive_message"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Deliver a message to recipient.</td>
-            </tr>
-            <tr>
-              <td><code>MESSAGE_DELIVERED</code></td>
-              <td><code>"message_delivered"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Confirm delivery to sender.</td>
-            </tr>
-            <tr>
-              <td><code>MESSAGE_ERROR</code></td>
-              <td><code>"message_error"</code></td>
-              <td>Server &rarr; Client</td>
-              <td>Message could not be delivered.</td>
-            </tr>
-            <tr>
-              <td><code>TYPING_START</code></td>
-              <td><code>"typing_start"</code></td>
-              <td>Both</td>
-              <td>User started typing.</td>
-            </tr>
-            <tr>
-              <td><code>TYPING_STOP</code></td>
-              <td><code>"typing_stop"</code></td>
-              <td>Both</td>
-              <td>User stopped typing.</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <p><strong>Usage:</strong></p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketEvent } from "sockr-shared";
-
-// Use enum values instead of raw strings
-socket.emit(SocketEvent.AUTHENTICATE, { token: "my-token" });
-socket.on(SocketEvent.AUTHENTICATED, (data) =&gt; { /* ... */ });</code></pre>
-        </div>
-
-        <hr>
-
-        <h2 id="eventpayloads">EventPayloads</h2>
-
-        <p>A type-safe mapping from each <code>SocketEvent</code> to its expected payload shape. Use this to enforce correct payloads at compile time.</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketEvent, EventPayloads } from "sockr-shared";
-
-// Type a handler's parameter:
-function handleAuth(payload: EventPayloads[SocketEvent.AUTHENTICATE]) {
-  console.log(payload.token); // string — type-safe
+class MyStore implements IMessageStore {
+  // implement all methods
 }
 
-// Type an event listener:
-socket.on(
-  SocketEvent.SEND_MESSAGE,
-  (payload: EventPayloads[SocketEvent.SEND_MESSAGE]) =&gt; {
-    console.log(payload.to);       // string
-    console.log(payload.content);  // string
-    console.log(payload.metadata); // Record&lt;string, any&gt; | undefined
-  }
-);</code></pre>
-        </div>
+new SocketServer({
+  providers: { messageStore: new MyStore() }
+});</code></pre>
 
-        <hr>
+    <pre><code>interface IMessageStore {
+  // ── Messages ──────────────────────────────────────────────
+  /** Persist a message. Called before delivery is attempted. */
+  saveMessage(message: PersistedMessage): Promise&lt;PersistedMessage&gt;;
 
-        <h3 id="authentication-payloads">Authentication Payloads</h3>
+  /** Retrieve a single message by ID. */
+  getMessage(messageId: string): Promise&lt;PersistedMessage | null&gt;;
 
-        <h4><code>AUTHENTICATE</code> — Client &rarr; Server</h4>
+  /**
+   * Paginated message history for a conversation.
+   * conversationId is "${userA}:${userB}" (sorted) for 1:1,
+   * or the groupId for group conversations.
+   */
+  getMessages(
+    conversationId: string,
+    opts: PaginationOpts
+  ): Promise&lt;PersistedMessage[]&gt;;
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  token: string;
+  /** Return messages not yet delivered to the given userId. */
+  getUndeliveredMessages(userId: string): Promise&lt;PersistedMessage[]&gt;;
+
+  /** Mark a message as delivered to a specific user. */
+  markDelivered(messageId: string, userId: string): Promise&lt;void&gt;;
+
+  /** Mark a message as read by a specific user. */
+  markRead(messageId: string, userId: string): Promise&lt;void&gt;;
+
+  // ── Groups ────────────────────────────────────────────────
+  saveGroup(group: Group): Promise&lt;Group&gt;;
+  getGroup(groupId: string): Promise&lt;Group | null&gt;;
+  updateGroup(
+    groupId: string,
+    updates: Partial&lt;Pick&lt;Group, 'name' | 'metadata'&gt;&gt;
+  ): Promise&lt;Group&gt;;
+  deleteGroup(groupId: string): Promise&lt;void&gt;;
+  addGroupMember(groupId: string, member: GroupMember): Promise&lt;void&gt;;
+  removeGroupMember(groupId: string, userId: string): Promise&lt;void&gt;;
+  getGroupMembers(groupId: string): Promise&lt;GroupMember[]&gt;;
+  getUserGroups(userId: string): Promise&lt;Group[]&gt;;
 }</code></pre>
-        </div>
 
-        <p>The token to validate. Sent by the client when initiating authentication.</p>
+    <!-- IQueueProvider -->
+    <h2 id="iqueue-provider">IQueueProvider</h2>
+    <p>Offline message queue contract. Used to enqueue messages for offline users and flush them on reconnect.</p>
+    <pre><code>interface IQueueProvider {
+  /** Enqueue a message for an offline user. */
+  enqueue(userId: string, message: PersistedMessage): Promise&lt;void&gt;;
 
-        <h4><code>AUTHENTICATED</code> — Server &rarr; Client</h4>
+  /** Dequeue and return all pending messages for a user. */
+  dequeue(userId: string): Promise&lt;PersistedMessage[]&gt;;
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  userId: string;
-  socketId: string;
+  /** Optional: called by Sockr to open a connection (e.g. Redis). */
+  connect?(): Promise&lt;void&gt;;
+
+  /** Optional: called by Sockr to close the connection. */
+  disconnect?(): Promise&lt;void&gt;;
 }</code></pre>
-        </div>
 
-        <p>Sent to the client after successful authentication.</p>
+    <!-- ICacheProvider -->
+    <h2 id="icache-provider">ICacheProvider</h2>
+    <p>General-purpose cache contract. Implement for any key-value store.</p>
+    <pre><code>interface ICacheProvider {
+  /** Retrieve a cached value by key. Returns null if not found. */
+  get(key: string): Promise&lt;string | null&gt;;
 
-        <h4><code>AUTH_ERROR</code> — Server &rarr; Client</h4>
+  /** Store a value. Optional TTL in seconds. */
+  set(key: string, value: string, ttl?: number): Promise&lt;void&gt;;
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  message: string;
+  /** Delete a cached value. */
+  delete(key: string): Promise&lt;void&gt;;
+
+  /** Optional: called by Sockr to open a connection. */
+  connect?(): Promise&lt;void&gt;;
+
+  /** Optional: called by Sockr to close the connection. */
+  disconnect?(): Promise&lt;void&gt;;
 }</code></pre>
-        </div>
 
-        <p>Sent to the client when authentication fails. Possible messages:</p>
-        <ul>
-          <li><code>"Invalid authentication token"</code> — the auth handler returned <code>null</code>.</li>
-          <li><code>"Authentication failed"</code> — the auth handler threw an error.</li>
-        </ul>
+    <div class="callout callout-tip">
+      <strong>Implementing custom providers:</strong> All optional <code>connect()</code> and <code>disconnect()</code> methods are called automatically by <code>SocketServer</code> during <code>listen()</code> / <code>initialize()</code> and <code>close()</code>. In-memory implementations can safely omit them.
+    </div>
 
-        <hr>
+    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="getting-started.html" class="btn btn-primary">← Getting Started</a>
+      <a href="server.html" class="btn btn-outline">Server Reference</a>
+    </div>
+  </main>
+</div>
 
-        <h3 id="presence-payloads">Presence Payloads</h3>
-
-        <h4><code>USER_ONLINE</code> — Server &rarr; All Clients</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  userId: string;
-}</code></pre>
-        </div>
-
-        <p>Broadcast to all clients when a user authenticates.</p>
-
-        <h4><code>USER_OFFLINE</code> — Server &rarr; All Clients</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  userId: string;
-}</code></pre>
-        </div>
-
-        <p>Broadcast to all clients when an authenticated user disconnects.</p>
-
-        <h4><code>GET_ONLINE_STATUS</code> — Client &rarr; Server</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  userIds: string[];
-}</code></pre>
-        </div>
-
-        <p>Request to check the online status of a list of users.</p>
-
-        <h4><code>ONLINE_STATUS</code> — Server &rarr; Client</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  statuses: Record&lt;string, boolean&gt;;
-}</code></pre>
-        </div>
-
-        <p>Response mapping each requested user ID to their online status.</p>
-
-        <hr>
-
-        <h3 id="messaging-payloads">Messaging Payloads</h3>
-
-        <h4><code>SEND_MESSAGE</code> — Client &rarr; Server</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  to: string;
-  content: string;
-  metadata?: Record&lt;string, any&gt;;
-}</code></pre>
-        </div>
-
-        <p>Send a direct message to another user.</p>
-
-        <h4><code>RECEIVE_MESSAGE</code> — Server &rarr; Recipient</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  from: string;
-  content: string;
-  timestamp: number;
-  messageId: string;
-  metadata?: Record&lt;string, any&gt;;
-}</code></pre>
-        </div>
-
-        <p>Delivered to the recipient when they receive a message. <code>messageId</code> is a server-generated UUID. <code>timestamp</code> is <code>Date.now()</code> at time of processing.</p>
-
-        <h4><code>MESSAGE_DELIVERED</code> — Server &rarr; Sender</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  messageId: string;
-}</code></pre>
-        </div>
-
-        <p>Confirmation sent to the sender after the message was delivered to the recipient.</p>
-
-        <h4><code>MESSAGE_ERROR</code> — Server &rarr; Sender</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  messageId: string;
-  error: string;
-}</code></pre>
-        </div>
-
-        <p>Sent to the sender when the message could not be delivered. Possible errors:</p>
-        <ul>
-          <li><code>"Not authenticated"</code> — the sender has not authenticated.</li>
-          <li><code>"Invalid user"</code> — the sender's user ID could not be resolved.</li>
-          <li><code>"Recipient is offline"</code> — the recipient is not connected.</li>
-        </ul>
-
-        <div class="callout callout-info">
-          <strong>Note:</strong> <code>messageId</code> may not be present for early failures (before UUID generation).
-        </div>
-
-        <hr>
-
-        <h3 id="typing-indicator-payloads">Typing Indicator Payloads</h3>
-
-        <h4><code>TYPING_START</code> — Client &rarr; Server</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  to: string;
-}</code></pre>
-        </div>
-
-        <p>Notify the server that you started typing to a specific user.</p>
-
-        <h4><code>TYPING_START</code> — Server &rarr; Recipient</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  from: string;
-}</code></pre>
-        </div>
-
-        <p>Forwarded to the recipient with the sender's user ID.</p>
-
-        <h4><code>TYPING_STOP</code> — Client &rarr; Server</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  to: string;
-}</code></pre>
-        </div>
-
-        <p>Notify the server that you stopped typing.</p>
-
-        <h4><code>TYPING_STOP</code> — Server &rarr; Recipient</h4>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">{
-  from: string;
-}</code></pre>
-        </div>
-
-        <p>Forwarded to the recipient with the sender's user ID.</p>
-
-        <div class="callout callout-info">
-          <strong>Note:</strong> Typing indicators fail silently. If the sender is unauthenticated or the recipient is offline, the event is simply dropped.
-        </div>
-
-        <hr>
-
-        <h2>Next Steps</h2>
-
-        <ul>
-          <li><a href="getting-started.html">Getting Started</a> — Install, set up the server, connect the client, and build a real-time chat</li>
-          <li><a href="server.html">Server SDK Reference</a> — Server modes, plugins, configuration, and events</li>
-          <li><a href="client.html">Client SDK Reference</a> — SocketClient API, React hooks, reconnection, and error handling</li>
-        </ul>
-
-      </div>
-    </main>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="2.5" fill="#00CFFF"/><circle cx="10" cy="10" r="5" stroke="#00CFFF" stroke-width="1" stroke-opacity="0.5"/><circle cx="10" cy="10" r="8" stroke="#00CFFF" stroke-width="0.8" stroke-opacity="0.2"/></svg>
+      sockr
+    </div>
+    <ul class="footer-links">
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="server.html">Server</a></li>
+      <li><a href="client.html">Client</a></li>
+      <li><a href="shared.html">Shared Types</a></li>
+      <li><a href="https://github.com/Dev-180Memes/sockr" target="_blank">GitHub</a></li>
+    </ul>
+    <p class="footer-copy">MIT License · © 2026 Adeoluwa Agbakosi</p>
   </div>
+</footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

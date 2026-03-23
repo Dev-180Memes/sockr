@@ -3,409 +3,467 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Getting Started - SOCKR</title>
-  <meta name="description" content="Get started with SOCKR - install, set up the server, connect the client, and build a real-time chat.">
+  <title>Getting Started — Sockr</title>
+  <meta name="description" content="Install Sockr and set up your first real-time WebSocket server and client in minutes.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/main.js"></script>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <a href="index.html" class="navbar-logo"><span>SOCKR</span></a>
-      <button class="menu-toggle" onclick="toggleMenu()" aria-label="Menu">&#9776;</button>
-      <ul class="navbar-links">
-        <li><a href="getting-started.html" class="active">Getting Started</a></li>
-        <li><a href="server.html">Server</a></li>
-        <li><a href="client.html">Client</a></li>
-        <li><a href="shared.html">Shared</a></li>
-      </ul>
-      <div class="navbar-actions">
-        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"></button>
-        <a href="https://github.com/Dev-180Memes/sockr" class="github-link" aria-label="GitHub">
-          <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        </a>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="3.5" fill="#00CFFF"/><circle cx="16" cy="16" r="7" stroke="#00CFFF" stroke-width="1.2" stroke-opacity="0.5"/><circle cx="16" cy="16" r="11" stroke="#00CFFF" stroke-width="0.8" stroke-opacity="0.25"/><line x1="16" y1="5" x2="16" y2="1" stroke="#00CFFF" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7"/></svg>
+      </div>
+      <span class="nav-logo-text">sockr<span>.</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="server.html">Server</a></li>
+      <li><a href="client.html">Client</a></li>
+      <li><a href="shared.html">Shared Types</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="https://github.com/Dev-180Memes/sockr" target="_blank" rel="noopener" class="nav-github">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+      <button class="theme-btn" title="Toggle theme">☀︎</button>
+      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-menu">
+  <a href="index.html">Home</a>
+  <a href="getting-started.html">Getting Started</a>
+  <a href="server.html">Server</a>
+  <a href="client.html">Client</a>
+  <a href="shared.html">Shared Types</a>
+  <a href="https://github.com/Dev-180Memes/sockr" target="_blank">GitHub ↗</a>
+</div>
+
+<div class="page-hero">
+  <div class="hero-badge" style="margin-bottom:1rem;">
+    <span class="pulse-dot"></span>
+    Getting Started
+  </div>
+  <h1>Get up and running fast</h1>
+  <p>Install Sockr, spin up a server, and send your first real-time message in minutes.</p>
+</div>
+
+<div class="page-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Setup</div>
+      <a href="#installation" class="sidebar-link">Installation</a>
+      <a href="#server-setup" class="sidebar-link">Server Setup</a>
+      <a href="#auth" class="sidebar-link">Authentication</a>
+      <a href="#client-react" class="sidebar-link">Client — React</a>
+      <a href="#client-vanilla" class="sidebar-link">Client — Vanilla JS</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Examples</div>
+      <a href="#first-message" class="sidebar-link">First Message</a>
+      <a href="#group-chat" class="sidebar-link">Group Chat</a>
+      <a href="#with-persistence" class="sidebar-link">With Persistence</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Next Steps</div>
+      <a href="server.html" class="sidebar-link">Server Reference</a>
+      <a href="client.html" class="sidebar-link">Client Reference</a>
+      <a href="shared.html" class="sidebar-link">Shared Types</a>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="doc-content">
+    <h1>Getting Started</h1>
+    <p class="page-subtitle">This guide walks you through installing Sockr, setting up a server, connecting a client, and sending your first real-time message.</p>
+
+    <!-- Installation -->
+    <h2 id="installation">Installation</h2>
+    <p>Sockr is split into three focused packages. Install only what you need:</p>
+
+    <div class="install-block">
+      <div class="install-tabs">
+        <button class="install-tab active">npm</button>
+        <button class="install-tab">pnpm</button>
+        <button class="install-tab">yarn</button>
+      </div>
+      <div class="install-panel active">
+        <pre><code># All packages (recommended for monorepos)
+npm install sockr-server sockr-client sockr-shared
+
+# Server only
+npm install sockr-server
+
+# Client only (React)
+npm install sockr-client sockr-shared</code></pre>
+      </div>
+      <div class="install-panel">
+        <pre><code># All packages
+pnpm add sockr-server sockr-client sockr-shared
+
+# Server only
+pnpm add sockr-server
+
+# Client only (React)
+pnpm add sockr-client sockr-shared</code></pre>
+      </div>
+      <div class="install-panel">
+        <pre><code># All packages
+yarn add sockr-server sockr-client sockr-shared
+
+# Server only
+yarn add sockr-server
+
+# Client only (React)
+yarn add sockr-client sockr-shared</code></pre>
       </div>
     </div>
-  </nav>
 
-  <div class="doc-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-heading">Guide</div>
-        <ul class="sidebar-links">
-          <li><a href="#installation">Installation</a></li>
-          <li><a href="#architecture">Architecture</a></li>
-          <li><a href="#server-setup">Server Setup</a></li>
-          <li><a href="#client-connection">Client Connection</a></li>
-          <li><a href="#react-integration">React Integration</a></li>
-          <li><a href="#full-example">Full Example</a></li>
-        </ul>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-heading">References</div>
-        <ul class="sidebar-links">
-          <li><a href="server.html">Server SDK</a></li>
-          <li><a href="client.html">Client SDK</a></li>
-          <li><a href="shared.html">Shared Types</a></li>
-        </ul>
-      </div>
-    </aside>
+    <div class="callout callout-info">
+      <strong>TypeScript:</strong> All packages ship with full TypeScript declarations. No <code>@types</code> packages needed.
+    </div>
 
-    <!-- Content -->
-    <main class="doc-content">
-      <div class="doc-content-inner">
-        <h1>Getting Started</h1>
-        <p class="subtitle">Set up a real-time messaging system in minutes with SOCKR's server and client packages.</p>
+    <!-- Server Setup -->
+    <h2 id="server-setup">Server Setup</h2>
+    <p>The <code>SocketServer</code> supports three initialization modes depending on your app's architecture.</p>
 
-        <h2 id="installation">Installation</h2>
+    <h3>Mode 1 — Standalone</h3>
+    <p>Sockr creates and manages its own HTTP server. The simplest setup for dedicated real-time services.</p>
+    <pre><code>import { SocketServer } from 'sockr-server';
 
-        <p>SOCKR is split into three npm packages. Install the ones you need:</p>
+const server = new SocketServer({ port: 3000 });
 
-        <div class="step">
-          <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>Server (Node.js backend)</h3>
-            <div class="code-block">
-              <div class="code-block-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-              <pre><code class="language-bash">npm install sockr-server</code></pre>
-            </div>
-            <p>Includes <code>sockr-shared</code> as a dependency — all shared types are re-exported.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>Client (Browser / React)</h3>
-            <div class="code-block">
-              <div class="code-block-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-              <pre><code class="language-bash">npm install sockr-client</code></pre>
-            </div>
-            <p>React 16.8+ is an optional peer dependency — the core <code>SocketClient</code> class works without React.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-number">3</div>
-          <div class="step-content">
-            <h3>Shared Types Only (optional)</h3>
-            <div class="code-block">
-              <div class="code-block-header"><span>bash</span><button class="copy-btn">Copy</button></div>
-              <pre><code class="language-bash">npm install sockr-shared</code></pre>
-            </div>
-            <p>Zero runtime dependencies. You only need this if building a custom integration without the server or client SDKs.</p>
-          </div>
-        </div>
-
-        <h2 id="architecture">Architecture</h2>
-
-        <p>SOCKR uses three packages that work together through shared type contracts:</p>
-
-        <div class="callout callout-info">
-          <strong>sockr-shared</strong> defines all event names (<code>SocketEvent</code> enum), payload shapes (<code>EventPayloads</code>), and configuration types. Both server and client import from it, ensuring type-safe communication at compile time.
-        </div>
-
-        <ul>
-          <li><strong>sockr-server</strong> — A plugin-based WebSocket server built on Socket.IO. Handles authentication, presence tracking, messaging, and typing indicators through built-in plugins. Extensible via custom plugins.</li>
-          <li><strong>sockr-client</strong> — A client SDK that manages the WebSocket connection, authentication flow, and reconnection. Includes 7 React hooks for building chat UIs.</li>
-          <li><strong>sockr-shared</strong> — TypeScript types and event definitions shared between server and client. Zero runtime cost.</li>
-        </ul>
-
-        <h2 id="server-setup">Server Setup</h2>
-
-        <p>The fastest way to get a server running:</p>
-
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketServer } from "sockr-server";
-
-const server = new SocketServer({ cors: { origin: "*" } })
+server
   .createStandalone()
-  .useAuth(async (token) => {
-    // Validate the token (JWT, database lookup, etc.)
-    const user = await validateToken(token);
-    return user ? { id: user.id } : null;
-  })
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging()
+  .useGroupMessaging();
+
+await server.listen(); // listens on port 3000</code></pre>
+
+    <h3>Mode 2 — Attach to existing HTTP server</h3>
+    <p>Attach Sockr to an existing <code>http.Server</code> or <code>https.Server</code>. Call <code>initialize()</code> instead of <code>listen()</code>, then start listening on your own server.</p>
+    <pre><code>import { createServer } from 'http';
+import { SocketServer } from 'sockr-server';
+
+const httpServer = createServer(myRequestHandler);
+const sockr = new SocketServer();
+
+sockr
+  .attach(httpServer)
+  .useAuth(authHandler)
   .usePresence()
   .useMessaging();
 
-await server.listen(3000);
-console.log("SOCKR server running on port 3000");</code></pre>
-        </div>
+await sockr.initialize(); // connects providers, inits plugins
+httpServer.listen(3000);   // start your own server</code></pre>
 
-        <p>This gives you:</p>
-        <ul>
-          <li>Token-based authentication</li>
-          <li>Online/offline presence broadcasts</li>
-          <li>Direct messaging with delivery confirmation</li>
-          <li>Typing indicators</li>
-        </ul>
+    <h3>Mode 3 — Attach to Express</h3>
+    <p>Pass an Express app to <code>attachToExpress()</code>. Sockr wraps it in an HTTP server internally. Call <code>listen()</code> to start.</p>
+    <pre><code>import express from 'express';
+import { SocketServer } from 'sockr-server';
 
-        <div class="callout callout-tip">
-          <strong>Tip:</strong> You can also attach SOCKR to an existing Express or HTTP server. See the <a href="server.html#server-modes">Server Modes</a> documentation.
-        </div>
+const app = express();
+app.get('/health', (req, res) => res.json({ ok: true }));
 
-        <h3>Server Configuration</h3>
+const sockr = new SocketServer();
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">const server = new SocketServer({
-  cors: {
-    origin: "https://myapp.com",
-    credentials: true,
-  },
-  port: 8080,
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  transports: ["websocket", "polling"],
-});</code></pre>
-        </div>
+sockr
+  .attachToExpress(app)
+  .useAuth(authHandler)
+  .usePresence()
+  .useMessaging()
+  .useGroupMessaging();
 
-        <p>See the full <a href="server.html#server-configuration">Server Configuration reference</a> for all options.</p>
+await sockr.listen(3000);</code></pre>
 
-        <h2 id="client-connection">Client Connection</h2>
+    <!-- Auth -->
+    <h2 id="auth">Authentication</h2>
+    <p>The <code>useAuth()</code> plugin takes an <strong>AuthHandler</strong> — an async function that receives the client's token and returns <code>{ userId: string }</code> on success or <code>null</code> to reject.</p>
 
-        <p>Connect to your server using the <code>SocketClient</code> class:</p>
+    <pre><code>import { SocketServer } from 'sockr-server';
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketClient } from "sockr-client";
+const server = new SocketServer({ port: 3000 });
 
-const client = new SocketClient({
-  url: "http://localhost:3000",
-  reconnection: true,
-});
+server
+  .createStandalone()
+  .useAuth(async (token: string) => {
+    // Verify with your own logic (JWT, database lookup, etc.)
+    const user = await db.findUserByToken(token);
+    if (!user) return null; // reject the connection
 
-// Listen for connection state changes
-client.onStateChange((state) => {
-  console.log("Connection state:", state);
-});
+    return { userId: user.id }; // authenticate
+  });
 
-// Authenticate after connecting
-client.on("authenticated", ({ userId }) => {
-  console.log("Logged in as", userId);
+await server.listen();</code></pre>
 
-  // Now you can send messages
-  client.sendMessage("bob", "Hey Bob!");
-});
+    <p>When authentication succeeds, the server emits <code>authenticated</code> to the client with <code>{ userId, socketId }</code>. On failure it emits <code>auth_error</code> with <code>{ message }</code>.</p>
 
-// Receive messages
-client.on("message", ({ from, content }) => {
-  console.log(`${from}: ${content}`);
-});
+    <div class="callout callout-tip">
+      <strong>Tip:</strong> Register <code>usePresence()</code>, <code>useMessaging()</code>, and <code>useGroupMessaging()</code> after <code>useAuth()</code>. On successful authentication, Sockr automatically flushes queued messages and restores group memberships for the connecting user.
+    </div>
 
-// Authenticate
-client.authenticate("my-auth-token");</code></pre>
-        </div>
+    <!-- Client React -->
+    <h2 id="client-react">Client — React</h2>
+    <p>Wrap your app in <code>SocketProvider</code>. Provide a <code>url</code> and optionally a <code>token</code> — authentication is triggered automatically once connected.</p>
 
-        <p>The client auto-connects by default. It handles reconnection with exponential backoff if the connection drops.</p>
+    <pre><code>import { SocketProvider } from 'sockr-client/react';
 
-        <h2 id="react-integration">React Integration</h2>
+function App() {
+  return (
+    &lt;SocketProvider
+      url="http://localhost:3000"
+      token={authToken}      // triggers authenticate() on connect
+      autoConnect={true}     // default: true
+    &gt;
+      &lt;YourApp /&gt;
+    &lt;/SocketProvider&gt;
+  );
+}</code></pre>
 
-        <p>Wrap your app in <code>&lt;SocketProvider&gt;</code> and use hooks to access socket functionality:</p>
+    <p>All 10 hooks are then available anywhere inside the provider:</p>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>tsx</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import {
-  SocketProvider,
+    <pre><code>import {
   useSocket,
   useMessages,
   useSendMessage,
   usePresence,
   useTypingIndicator,
-} from "sockr-client";
+} from 'sockr-client/react';
 
-// 1. Wrap your app with SocketProvider
-function App() {
-  return (
-    &lt;SocketProvider
-      config={{ url: "http://localhost:3000" }}
-      token="my-auth-token"
-    &gt;
-      &lt;Chat /&gt;
-    &lt;/SocketProvider&gt;
-  );
-}
-
-// 2. Use hooks in your components
-function Chat() {
-  const { isConnected, isAuthenticated } = useSocket();
+function Dashboard() {
+  const { isAuthenticated, userId } = useSocket();
   const { messages } = useMessages();
   const { sendMessage, isSending } = useSendMessage();
   const { isUserOnline } = usePresence();
-  const { startTyping, stopTyping, usersTyping } = useTypingIndicator();
-
-  if (!isConnected) return &lt;p&gt;Connecting...&lt;/p&gt;;
-  if (!isAuthenticated) return &lt;p&gt;Authenticating...&lt;/p&gt;;
+  const { usersTyping } = useTypingIndicator();
 
   return (
     &lt;div&gt;
-      {messages.map((msg) =&gt; (
-        &lt;p key={msg.id}&gt;
-          &lt;strong&gt;{msg.from}:&lt;/strong&gt; {msg.content}
-        &lt;/p&gt;
+      &lt;p&gt;Logged in as {userId}&lt;/p&gt;
+      {[...usersTyping].map(id =&gt; (
+        &lt;p key={id}&gt;{id} is typing...&lt;/p&gt;
       ))}
+      {messages.map(msg =&gt; (
+        &lt;div key={msg.id}&gt;
+          &lt;strong&gt;{msg.from}&lt;/strong&gt;
+          {isUserOnline(msg.from) &amp;&amp; &lt;span&gt; 🟢&lt;/span&gt;}
+          : {msg.content}
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
 
-      {usersTyping.size &gt; 0 &amp;&amp; &lt;p&gt;Someone is typing...&lt;/p&gt;}
+    <div class="callout callout-info">
+      <strong>React Native:</strong> Use <code>transports={['websocket']}</code> on the provider — polling transport is not supported in React Native.
+    </div>
 
-      &lt;input
-        onChange={() =&gt; startTyping("bob")}
-        onBlur={() =&gt; stopTyping("bob")}
-      /&gt;
+    <!-- Client Vanilla -->
+    <h2 id="client-vanilla">Client — Vanilla JS / TypeScript</h2>
+    <p>Use <code>SocketClient</code> directly without any framework dependency.</p>
+
+    <pre><code>import { SocketClient } from 'sockr-client';
+
+const client = new SocketClient({
+  url: 'http://localhost:3000',
+  autoConnect: true,
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,   // delays multiply per attempt
+  timeout: 20000,
+  transports: ['websocket'],
+});
+
+// Connection lifecycle
+client.on('connect', () => {
+  client.authenticate('your-auth-token');
+});
+
+client.on('authenticated', ({ userId, socketId }) => {
+  console.log('Authenticated as', userId);
+});
+
+client.on('auth_error', ({ message }) => {
+  console.error('Auth failed:', message);
+});
+
+// Receive messages
+client.on('message', ({ from, content, timestamp, messageId }) => {
+  console.log(`[${from}]: ${content}`);
+});
+
+// Send a message
+client.sendMessage('recipient-user-id', 'Hello!');
+
+// Cleanup
+// client.disconnect();</code></pre>
+
+    <!-- First message -->
+    <h2 id="first-message">Sending Your First Message</h2>
+    <p>A complete example using <code>useSendMessage</code> and <code>useMessages</code>:</p>
+
+    <pre><code>import { useSendMessage, useMessages } from 'sockr-client/react';
+
+interface Props {
+  recipientId: string;
+}
+
+function DirectMessage({ recipientId }: Props) {
+  const { messages } = useMessages();
+  const { sendMessage, isSending, error } = useSendMessage();
+
+  return (
+    &lt;div&gt;
+      &lt;div className="message-list"&gt;
+        {messages.map(msg =&gt; (
+          &lt;div key={msg.id} className="message"&gt;
+            &lt;strong&gt;{msg.from}&lt;/strong&gt;: {msg.content}
+            &lt;span&gt;{new Date(msg.timestamp).toLocaleTimeString()}&lt;/span&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+
+      {error &amp;&amp; &lt;p style={{ color: 'red' }}&gt;{error}&lt;/p&gt;}
+
       &lt;button
+        onClick={() =&gt; sendMessage(recipientId, 'Hello!')}
         disabled={isSending}
-        onClick={() =&gt; sendMessage("bob", "Hello!")}
       &gt;
-        Send
+        {isSending ? 'Sending...' : 'Send'}
       &lt;/button&gt;
     &lt;/div&gt;
   );
 }</code></pre>
-        </div>
 
-        <h3>Available Hooks</h3>
+    <!-- Group chat -->
+    <h2 id="group-chat">Group Chat Example</h2>
+    <p>Use <code>useUserGroups</code>, <code>useGroupMessages</code>, and <code>useGroupTyping</code> together for a complete group chat experience:</p>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Hook</th>
-              <th>Purpose</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code><a href="client.html#usesocket">useSocket</a></code></td>
-              <td>Access client instance, connection state, and user ID</td>
-            </tr>
-            <tr>
-              <td><code><a href="client.html#usemessages">useMessages</a></code></td>
-              <td>Receive and manage incoming messages</td>
-            </tr>
-            <tr>
-              <td><code><a href="client.html#usesendmessage">useSendMessage</a></code></td>
-              <td>Send messages with loading and error states</td>
-            </tr>
-            <tr>
-              <td><code><a href="client.html#usepresence">usePresence</a></code></td>
-              <td>Track which users are online</td>
-            </tr>
-            <tr>
-              <td><code><a href="client.html#usetypingindicator">useTypingIndicator</a></code></td>
-              <td>Manage typing indicators with auto-timeout</td>
-            </tr>
-            <tr>
-              <td><code><a href="client.html#usesocketevent">useSocketEvent</a></code></td>
-              <td>Subscribe to any socket event in React lifecycle</td>
-            </tr>
-          </tbody>
-        </table>
+    <pre><code>import {
+  useUserGroups,
+  useGroupMessages,
+  useGroupTyping,
+} from 'sockr-client/react';
 
-        <h2 id="full-example">Full Example</h2>
+// List groups and create new ones
+function GroupList() {
+  const { groups, isLoading, createGroup } = useUserGroups();
 
-        <p>Here's a complete server + client example you can run locally:</p>
+  return (
+    &lt;div&gt;
+      {isLoading &amp;&amp; &lt;p&gt;Loading groups...&lt;/p&gt;}
+      {groups.map(g =&gt; (
+        &lt;div key={g.id}&gt;{g.name}&lt;/div&gt;
+      ))}
+      &lt;button onClick={() =&gt; createGroup('My Group', ['user-2', 'user-3'])}&gt;
+        New Group
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
 
-        <h3>Server (server.ts)</h3>
+// Group conversation
+function GroupChat({ groupId }: { groupId: string }) {
+  const { messages, sendMessage, isLoadingHistory } =
+    useGroupMessages(groupId, { fetchHistory: true, limit: 50 });
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketServer, AuthHandler } from "sockr-server";
+  const { typingMembers, startTyping, stopTyping } =
+    useGroupTyping(groupId, 2000);
 
-// Simple in-memory auth for demo purposes
-const authHandler: AuthHandler = async (token) => {
-  const users: Record&lt;string, { id: string }&gt; = {
-    "token-alice": { id: "alice" },
-    "token-bob": { id: "bob" },
-  };
-  return users[token] || null;
-};
+  return (
+    &lt;div&gt;
+      {isLoadingHistory &amp;&amp; &lt;p&gt;Loading history...&lt;/p&gt;}
+      {typingMembers.length &gt; 0 &amp;&amp; (
+        &lt;p&gt;{typingMembers.join(', ')} typing...&lt;/p&gt;
+      )}
+      {messages.map(msg =&gt; (
+        &lt;div key={msg.id}&gt;
+          &lt;strong&gt;{msg.from}&lt;/strong&gt;: {msg.content}
+        &lt;/div&gt;
+      ))}
+      &lt;input
+        onFocus={startTyping}
+        onBlur={stopTyping}
+        onKeyDown={startTyping}
+        placeholder="Type a message..."
+      /&gt;
+      &lt;button onClick={() =&gt; sendMessage('Hello group!')}&gt;Send&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <!-- With persistence -->
+    <h2 id="with-persistence">With Persistence</h2>
+    <p>By default, Sockr uses in-memory providers (data is lost on restart). For production, supply real adapters via the <code>providers</code> config.</p>
+
+    <pre><code>import { SocketServer } from 'sockr-server';
+import { MongoMessageStore } from 'sockr-server/adapters/db/mongo';
+import { RedisQueueProvider } from 'sockr-server/adapters/queue/redis';
+import { RedisCacheProvider } from 'sockr-server/adapters/cache/redis';
 
 const server = new SocketServer({
-  cors: { origin: "*" },
-  transports: ["websocket"],
-})
+  port: 3000,
+  cors: { origin: 'https://myapp.com', credentials: true },
+  providers: {
+    messageStore: new MongoMessageStore(
+      'mongodb://localhost:27017/myapp'
+    ),
+    queue: new RedisQueueProvider('redis://localhost:6379'),
+    cache: new RedisCacheProvider('redis://localhost:6379'),
+  },
+});
+
+server
   .createStandalone()
   .useAuth(authHandler)
   .usePresence()
-  .useMessaging();
+  .useMessaging()
+  .useGroupMessaging();
 
-await server.listen(3000);
-console.log("Server running on http://localhost:3000");</code></pre>
-        </div>
+await server.listen();</code></pre>
 
-        <h3>Client (client.ts)</h3>
+    <div class="callout callout-tip">
+      <strong>Offline queuing:</strong> With a queue provider configured, messages sent to offline users are stored and automatically flushed the next time they connect and authenticate.
+    </div>
 
-        <div class="code-block">
-          <div class="code-block-header"><span>typescript</span><button class="copy-btn">Copy</button></div>
-          <pre><code class="language-typescript">import { SocketClient } from "sockr-client";
+    <div class="callout callout-info">
+      <strong>Custom adapters:</strong> Implement the <code>IMessageStore</code>, <code>IQueueProvider</code>, or <code>ICacheProvider</code> interfaces from <code>sockr-shared</code> to integrate any database or caching system. See the <a href="shared.html">Shared Types</a> page for the full interface definitions.
+    </div>
 
-const client = new SocketClient({
-  url: "http://localhost:3000",
-  transports: ["websocket"],
-});
+    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border);display:flex;gap:1rem;flex-wrap:wrap;">
+      <a href="server.html" class="btn btn-primary">Server Reference →</a>
+      <a href="client.html" class="btn btn-outline">Client Reference →</a>
+    </div>
+  </main>
+</div>
 
-// Authenticate
-client.on("authenticated", ({ userId }) => {
-  console.log("Logged in as", userId);
-
-  // Check who's online
-  client.getOnlineStatus(["bob"]);
-
-  // Send a message
-  client.sendMessage("bob", "Hey Bob!");
-
-  // Typing indicators
-  client.startTyping("bob");
-  setTimeout(() => client.stopTyping("bob"), 2000);
-});
-
-client.on("auth_error", ({ message }) => {
-  console.error("Auth failed:", message);
-});
-
-// Presence
-client.on("user_online", ({ userId }) => console.log(userId, "online"));
-client.on("user_offline", ({ userId }) => console.log(userId, "offline"));
-
-// Messages
-client.on("message", ({ from, content }) => {
-  console.log(`${from}: ${content}`);
-});
-
-client.on("message_delivered", ({ messageId }) => {
-  console.log("Delivered:", messageId);
-});
-
-// Typing
-client.on("typing_start", ({ from }) => console.log(from, "is typing..."));
-client.on("typing_stop", ({ from }) => console.log(from, "stopped typing"));
-
-// Connect and authenticate
-client.authenticate("token-alice");</code></pre>
-        </div>
-
-        <hr>
-
-        <h2>Next Steps</h2>
-
-        <ul>
-          <li><a href="server.html">Server SDK Reference</a> — Server modes, plugins, configuration, and events</li>
-          <li><a href="client.html">Client SDK Reference</a> — SocketClient API, React hooks, reconnection, and error handling</li>
-          <li><a href="shared.html">Shared Types Reference</a> — SocketEvent enum, EventPayloads, and all TypeScript interfaces</li>
-        </ul>
-
-      </div>
-    </main>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="2.5" fill="#00CFFF"/><circle cx="10" cy="10" r="5" stroke="#00CFFF" stroke-width="1" stroke-opacity="0.5"/><circle cx="10" cy="10" r="8" stroke="#00CFFF" stroke-width="0.8" stroke-opacity="0.2"/></svg>
+      sockr
+    </div>
+    <ul class="footer-links">
+      <li><a href="getting-started.html">Getting Started</a></li>
+      <li><a href="server.html">Server</a></li>
+      <li><a href="client.html">Client</a></li>
+      <li><a href="shared.html">Shared Types</a></li>
+      <li><a href="https://github.com/Dev-180Memes/sockr" target="_blank">GitHub</a></li>
+    </ul>
+    <p class="footer-copy">MIT License · © 2026 Adeoluwa Agbakosi</p>
   </div>
+</footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
