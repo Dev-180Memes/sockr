@@ -7,6 +7,7 @@ import { AuthPlugin, AuthHandler } from '../plugins/AuthPlugin';
 import { PresencePlugin } from '../plugins/PresencePlugin';
 import { MessagePlugin } from '../plugins/MessagePlugin';
 import { GroupPlugin } from '../plugins/GroupPlugin';
+import { VoicePlugin } from '../plugins/VoicePlugin';
 import { Plugin } from '../plugins/Plugin';
 import { ServerConfig } from 'sockr-shared';
 import {
@@ -27,6 +28,7 @@ export class SocketServer {
   private presencePlugin?: PresencePlugin;
   private messagePlugin?: MessagePlugin;
   private groupPlugin?: GroupPlugin;
+  private voicePlugin?: VoicePlugin;
   private config: ServerConfig;
   private providers: ResolvedProviders;
   private isOwnServer: boolean = false;
@@ -114,6 +116,16 @@ export class SocketServer {
     return this;
   }
 
+  public useVoice(): this {
+    this.voicePlugin = new VoicePlugin(
+      this.getIO(),
+      this.connectionManager,
+      this.config.voice ?? {}
+    );
+    this.plugins.push(this.voicePlugin);
+    return this;
+  }
+
   public use(plugin: Plugin): this {
     this.plugins.push(plugin);
     return this;
@@ -162,10 +174,13 @@ export class SocketServer {
 
         this.connectionManager.removeConnection(socket.id);
 
-        // Only broadcast offline if this was the user's last active socket
+        // Only broadcast offline / clean up calls if this was the user's last active socket
         if (userId && !this.connectionManager.isUserOnline(userId)) {
           if (this.presencePlugin) {
             this.presencePlugin.broadcastUserOffline(userId);
+          }
+          if (this.voicePlugin) {
+            this.voicePlugin.cleanupCallsForUser(userId);
           }
         }
       });

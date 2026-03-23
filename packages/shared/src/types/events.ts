@@ -58,6 +58,21 @@ export enum SocketEvent {
  
   GET_GROUP_MESSAGE_HISTORY = 'get_group_message_history',
   GROUP_MESSAGE_HISTORY = 'group_message_history',
+
+  // Voice calling — signaling only, media is P2P WebRTC
+  CALL_GET_ICE_SERVERS = 'call_get_ice_servers',
+  CALL_ICE_SERVERS = 'call_ice_servers',
+  CALL_INITIATE = 'call_initiate',
+  CALL_INCOMING = 'call_incoming',
+  CALL_RINGING = 'call_ringing',
+  CALL_ANSWER = 'call_answer',
+  CALL_ANSWERED = 'call_answered',
+  CALL_REJECT = 'call_reject',
+  CALL_REJECTED = 'call_rejected',
+  CALL_HANGUP = 'call_hangup',
+  CALL_ENDED = 'call_ended',
+  CALL_BUSY = 'call_busy',
+  CALL_ICE_CANDIDATE = 'call_ice_candidate',
 }
 
 export interface EventPayloads {
@@ -215,5 +230,47 @@ export interface EventPayloads {
   [SocketEvent.GROUP_MESSAGE_HISTORY]: {
     groupId: string;
     messages: import('./message').PersistedMessage[];
+  };
+
+  // ── Voice calling ──────────────────────────────────────────────────────────
+
+  [SocketEvent.CALL_GET_ICE_SERVERS]: Record<string, never>;
+  [SocketEvent.CALL_ICE_SERVERS]: {
+    iceServers: import('./call').IceServer[];
+  };
+
+  [SocketEvent.CALL_INITIATE]: {
+    to: string;
+    sdpOffer: string;
+  };
+  [SocketEvent.CALL_INCOMING]: {
+    callId: string;
+    from: string;
+    sdpOffer: string;
+    iceServers: import('./call').IceServer[];
+  };
+  [SocketEvent.CALL_RINGING]: {
+    callId: string;
+  };
+
+  [SocketEvent.CALL_ANSWER]: {
+    callId: string;
+    sdpAnswer: string;
+  };
+  [SocketEvent.CALL_ANSWERED]: {
+    callId: string;
+    sdpAnswer: string;
+  };
+
+  [SocketEvent.CALL_REJECT]: { callId: string };
+  [SocketEvent.CALL_REJECTED]: { callId: string };
+
+  [SocketEvent.CALL_HANGUP]: { callId: string };
+  [SocketEvent.CALL_ENDED]: { callId: string };
+  [SocketEvent.CALL_BUSY]: { callId: string };
+
+  [SocketEvent.CALL_ICE_CANDIDATE]: {
+    callId: string;
+    candidate: import('./call').IceCandidateInit;
   };
 }

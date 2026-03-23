@@ -1,0 +1,11 @@
+services:
+  coturn:
+    image: coturn/coturn:latest
+    restart: unless-stopped
+    network_mode: host   # required so Coturn can see real client IPs for relay
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    environment:
+      # Matches the `static-auth-secret` in turnserver.conf.
+      # Override this with a strong random value in production.
+      - TURN_SECRET=${TURN_SECRET:-changeme}

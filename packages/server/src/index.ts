@@ -9,6 +9,7 @@ export type { AuthHandler } from './plugins/AuthPlugin';
 export { PresencePlugin } from './plugins/PresencePlugin';
 export { MessagePlugin } from './plugins/MessagePlugin';
 export { GroupPlugin } from './plugins/GroupPlugin';
+export { VoicePlugin } from './plugins/VoicePlugin';
 
 // DB adapters
 export { MongoMessageStore } from './adapters/db/MongoMessageStore';

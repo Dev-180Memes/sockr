@@ -209,6 +209,39 @@ export class SocketClient {
     this.socket.on(SocketEvent.GROUP_MESSAGE_HISTORY, (data: EventPayloads[SocketEvent.GROUP_MESSAGE_HISTORY]) => {
       this.eventEmitter.emit('group_message_history', data);
     });
+
+    // ── Voice call events ─────────────────────────────────────────────────────
+    this.socket.on(SocketEvent.CALL_ICE_SERVERS, (data: EventPayloads[SocketEvent.CALL_ICE_SERVERS]) => {
+      this.eventEmitter.emit('call_ice_servers', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_INCOMING, (data: EventPayloads[SocketEvent.CALL_INCOMING]) => {
+      this.eventEmitter.emit('call_incoming', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_RINGING, (data: EventPayloads[SocketEvent.CALL_RINGING]) => {
+      this.eventEmitter.emit('call_ringing', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_ANSWERED, (data: EventPayloads[SocketEvent.CALL_ANSWERED]) => {
+      this.eventEmitter.emit('call_answered', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_REJECTED, (data: EventPayloads[SocketEvent.CALL_REJECTED]) => {
+      this.eventEmitter.emit('call_rejected', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_ENDED, (data: EventPayloads[SocketEvent.CALL_ENDED]) => {
+      this.eventEmitter.emit('call_ended', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_BUSY, (data: EventPayloads[SocketEvent.CALL_BUSY]) => {
+      this.eventEmitter.emit('call_busy', data);
+    });
+
+    this.socket.on(SocketEvent.CALL_ICE_CANDIDATE, (data: EventPayloads[SocketEvent.CALL_ICE_CANDIDATE]) => {
+      this.eventEmitter.emit('call_ice_candidate', data);
+    });
   }
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -322,6 +355,38 @@ export class SocketClient {
   public stopGroupTyping(groupId: string): void {
     if (!this.isAuthenticated()) return;
     this.socket!.emit(SocketEvent.GROUP_TYPING_STOP, { groupId });
+  }
+
+  // ─── Voice calling ─────────────────────────────────────────────────────────
+
+  public getIceServers(): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_GET_ICE_SERVERS, {});
+  }
+
+  public initiateCall(to: string, sdpOffer: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_INITIATE, { to, sdpOffer } as EventPayloads[SocketEvent.CALL_INITIATE]);
+  }
+
+  public answerCall(callId: string, sdpAnswer: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_ANSWER, { callId, sdpAnswer } as EventPayloads[SocketEvent.CALL_ANSWER]);
+  }
+
+  public rejectCall(callId: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_REJECT, { callId } as EventPayloads[SocketEvent.CALL_REJECT]);
+  }
+
+  public hangUp(callId: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_HANGUP, { callId } as EventPayloads[SocketEvent.CALL_HANGUP]);
+  }
+
+  public sendIceCandidate(callId: string, candidate: EventPayloads[typeof SocketEvent.CALL_ICE_CANDIDATE]['candidate']): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CALL_ICE_CANDIDATE, { callId, candidate } as EventPayloads[SocketEvent.CALL_ICE_CANDIDATE]);
   }
 
   // ─── Event subscriptions ──────────────────────────────────────────────────
