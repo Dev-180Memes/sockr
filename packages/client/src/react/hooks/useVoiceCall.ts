@@ -12,14 +12,21 @@ export interface IncomingCall {
   iceServers: IceServer[];
 }
 
+export interface UseVoiceCallOptions {
+  /** Request a video track in addition to audio. Default: false. */
+  video?: boolean;
+}
+
 export interface UseVoiceCallReturn {
   callState: CallState;
   /** Set when another user is calling you. Display this to show the incoming call UI. */
   incomingCall: IncomingCall | null;
-  /** The remote audio stream. Attach to an <audio autoPlay /> element. */
+  /** The remote media stream. Attach to an <audio> or <video autoPlay /> element. */
   remoteStream: MediaStream | null;
+  /** The local media stream (audio+video). Attach to a muted <video> element for self-preview. */
+  localStream: MediaStream | null;
   currentCallId: string | null;
-  /** Fetch ICE servers then create offer, get mic, and call the target user. */
+  /** Fetch ICE servers then create offer, get mic (and optionally camera), and call the target user. */
   startCall: (userId: string) => Promise<void>;
   /** Accept an incoming call. Must be called while incomingCall is set. */
   answerCall: () => Promise<void>;
@@ -29,12 +36,14 @@ export interface UseVoiceCallReturn {
   hangUp: () => void;
 }
 
-export const useVoiceCall = (): UseVoiceCallReturn => {
+export const useVoiceCall = (opts: UseVoiceCallOptions = {}): UseVoiceCallReturn => {
   const { client } = useSocket();
+  const { video = false } = opts;
 
   const [callState, setCallState] = useState<CallState>('idle');
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
 
   // Refs used inside async callbacks to avoid stale closure issues
@@ -56,6 +65,7 @@ export const useVoiceCall = (): UseVoiceCallReturn => {
     pendingCandidates.current = [];
     setCallId(null);
     setRemoteStream(null);
+    setLocalStream(null);
     setCallState('idle');
     setIncomingCall(null);
   }, [setCallId]);
@@ -214,8 +224,9 @@ export const useVoiceCall = (): UseVoiceCallReturn => {
       });
 
       const pc = buildPeerConnection(iceServers);
-      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video });
       localStreamRef.current = localStream;
+      setLocalStream(localStream);
       localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
       const offer = await pc.createOffer();
@@ -237,8 +248,9 @@ export const useVoiceCall = (): UseVoiceCallReturn => {
 
     const pc = buildPeerConnection(iceServers);
 
-    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video });
     localStreamRef.current = localStream;
+    setLocalStream(localStream);
     localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
     await pc.setRemoteDescription({ type: 'offer', sdp: sdpOffer });
@@ -272,6 +284,7 @@ export const useVoiceCall = (): UseVoiceCallReturn => {
     callState,
     incomingCall,
     remoteStream,
+    localStream,
     currentCallId,
     startCall,
     answerCall,
