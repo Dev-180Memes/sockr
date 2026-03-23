@@ -13,14 +13,22 @@ npm install sockr-server
 ```typescript
 import { SocketServer } from "sockr-server";
 
-const server = new SocketServer({ cors: { origin: "*" } })
+const server = new SocketServer({
+  cors: { origin: "*" },
+  voice: {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    turn: { urls: "turn:turn.example.com", secret: "my-secret", ttl: 3600 },
+  },
+})
   .createStandalone()
   .useAuth(async (token) => {
     const user = await validateToken(token);
     return user ? { id: user.id } : null;
   })
   .usePresence()
-  .useMessaging();
+  .useMessaging()
+  .useGroupMessaging()
+  .useVoice();
 
 await server.listen(3000);
 ```
@@ -96,6 +104,7 @@ new SocketServer(config?: ServerConfig)
 | `pingTimeout` | `number` | Ping timeout in ms |
 | `pingInterval` | `number` | Ping interval in ms |
 | `transports` | `string[]` | Allowed transports (e.g. `["websocket"]`) |
+| `voice` | `VoiceConfig` | Voice calling configuration (required to use `useVoice()`) |
 
 #### Methods
 
@@ -107,6 +116,8 @@ new SocketServer(config?: ServerConfig)
 | `useAuth(handler)` | `this` | Enable authentication with a handler |
 | `usePresence()` | `this` | Enable presence tracking |
 | `useMessaging()` | `this` | Enable direct messaging and typing indicators |
+| `useGroupMessaging()` | `this` | Enable group chats with membership and message history |
+| `useVoice()` | `this` | Enable WebRTC voice call signaling |
 | `use(plugin)` | `this` | Register a custom plugin |
 | `initialize()` | `this` | Initialize plugins (for use with `attach()`) |
 | `listen(port?)` | `Promise<void>` | Start the server on the given port |
@@ -175,6 +186,51 @@ Routes direct messages between authenticated users and supports typing indicator
 ```typescript
 server.useMessaging();
 ```
+
+### GroupPlugin
+
+Manages multi-user group chats. Handles group creation and membership, fan-out message delivery, offline queuing, message history, and per-group typing indicators.
+
+```typescript
+server.useGroupMessaging();
+```
+
+Key behaviors:
+
+- Creator is added as `admin`; invited members are added as `member`.
+- All of a user's active sockets (tabs/devices) are joined to group rooms simultaneously.
+- Messages are delivered to online members via Socket.IO rooms and queued for offline members.
+- Membership and message history are backed by the configured `messageStore` provider.
+
+### VoicePlugin
+
+Handles WebRTC signaling for peer-to-peer voice calls. Media never passes through the server — only SDP offers/answers and ICE candidates are relayed.
+
+```typescript
+server.useVoice();
+```
+
+Configure ICE/TURN servers in `ServerConfig.voice`:
+
+```typescript
+new SocketServer({
+  voice: {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    turn: {
+      urls: "turn:turn.example.com:3478",
+      secret: "my-coturn-static-secret",
+      ttl: 3600, // credential lifetime in seconds (default: 3600)
+    },
+  },
+}).useVoice();
+```
+
+Key behaviors:
+
+- Short-lived HMAC-SHA1 TURN credentials are generated per user — the TURN secret never reaches the client.
+- Callee receives `CALL_INCOMING` on **all** their connected devices simultaneously.
+- A `CALL_BUSY` signal is sent if the callee is already in an active or ringing call.
+- Calls are automatically cleaned up when a user fully disconnects.
 
 ## Custom Plugins
 

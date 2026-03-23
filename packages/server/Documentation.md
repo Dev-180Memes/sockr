@@ -17,6 +17,8 @@ Complete reference for the `sockr-server` package.
 - [Presence Tracking](#presence-tracking)
 - [Messaging](#messaging)
 - [Typing Indicators](#typing-indicators)
+- [Group Messaging](#group-messaging)
+- [Voice Calling](#voice-calling)
 - [Connection Management](#connection-management)
 - [Custom Plugins](#custom-plugins)
 - [Socket Events Reference](#socket-events-reference)
@@ -118,6 +120,7 @@ httpServer.listen(3000);
 ```
 
 When using `attach()`, the server is **not owned** by sockr. This means:
+
 - Call `listen()` on your HTTP server, not on sockr.
 - `sockr.close()` will close Socket.IO but will **not** close the HTTP server.
 - Call `initialize()` to initialize plugins after setting them up.
@@ -169,6 +172,7 @@ const server = new SocketServer({
 | `pingTimeout`   | `number`                           | `60000`                          | How long (ms) without a pong before closing the connection |
 | `pingInterval`  | `number`                           | `25000`                          | How often (ms) to send a ping           |
 | `transports`    | `("websocket" \| "polling")[]`     | `["websocket", "polling"]`       | Allowed transport methods               |
+| `voice`         | `VoiceConfig`                      | `undefined`                      | ICE/TURN configuration for voice calling (see [Voice Calling](#voice-calling)) |
 
 The port used by `listen()` is resolved as: argument > `config.port` > `3000`.
 
@@ -408,6 +412,350 @@ socket.on("typing_stop", (data) => {
 
 ---
 
+## Group Messaging
+
+Enable multi-user group chats with persistent membership, message history, offline queuing, and per-group typing indicators.
+
+```typescript
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .useGroupMessaging();
+
+await server.listen(3000);
+```
+
+> **Note:** Group messaging requires a `messageStore`, `queue`, and `cache` provider. By default the server uses in-memory implementations. Pass custom providers to `useGroupMessaging()` for production use.
+
+### Creating a Group
+
+```typescript
+// Client sends:
+socket.emit("group_create", {
+  name: "My Group",
+  members: ["user-2", "user-3"], // optional initial members
+  metadata: { topic: "general" }, // optional
+});
+
+// Client receives:
+socket.on("group_created", (data) => {
+  console.log(data.group);
+  // {
+  //   id: "550e8400-...",
+  //   name: "My Group",
+  //   createdBy: "user-1",
+  //   createdAt: 1707300000000,
+  //   members: ["user-1", "user-2", "user-3"],
+  //   metadata: { topic: "general" }
+  // }
+});
+
+// On error:
+socket.on("group_create_error", (data) => {
+  console.error(data.error);
+  // { error: string }
+});
+```
+
+The creator is automatically added as `admin`. Invited members are added as `member`. All of a member's active sockets (tabs/devices) are joined to the Socket.IO room immediately.
+
+### Joining a Group
+
+```typescript
+// Client sends:
+socket.emit("group_join", { groupId: "550e8400-..." });
+
+// Client receives confirmation plus queued messages missed while offline:
+socket.on("group_joined", (data) => {
+  console.log(data.group, data.queuedMessages);
+  // {
+  //   groupId: string,
+  //   group: Group,
+  //   queuedMessages: PersistedMessage[]
+  // }
+});
+
+// On error:
+socket.on("group_join_error", (data) => {
+  console.error(data.error);
+  // { groupId: string, error: string }
+});
+
+// Other group members receive:
+socket.on("group_member_joined", (data) => {
+  // { groupId: string, member: { userId: string, role: "member", joinedAt: number } }
+});
+```
+
+### Leaving a Group
+
+```typescript
+// Client sends:
+socket.emit("group_leave", { groupId: "550e8400-..." });
+
+// Client receives:
+socket.on("group_left", (data) => {
+  // { groupId: string }
+});
+
+// Other group members receive:
+socket.on("group_member_left", (data) => {
+  // { groupId: string, userId: string }
+});
+```
+
+### Sending a Group Message
+
+```typescript
+// Client sends:
+socket.emit("group_send_message", {
+  groupId: "550e8400-...",
+  content: "Hello group!",
+  metadata: { type: "text" }, // optional
+});
+
+// All online group members receive:
+socket.on("group_receive_message", (data) => {
+  console.log(data);
+  // {
+  //   groupId: string,
+  //   messageId: string,
+  //   from: string,
+  //   content: string,
+  //   timestamp: number,
+  //   metadata?: object
+  // }
+});
+
+// Sender receives delivery confirmation:
+socket.on("group_message_delivered", (data) => {
+  // { groupId: string, messageId: string }
+});
+
+// On error:
+socket.on("group_message_error", (data) => {
+  // { groupId: string, messageId?: string, error: string }
+});
+```
+
+Offline members receive queued messages the next time they call `group_join`.
+
+### Read Receipts
+
+```typescript
+// Client sends:
+socket.emit("group_message_read", {
+  groupId: "550e8400-...",
+  messageId: "message-uuid",
+});
+
+// Other group members receive:
+socket.on("group_message_read", (data) => {
+  // { groupId: string, messageId: string }
+});
+```
+
+### Group Typing Indicators
+
+```typescript
+socket.emit("group_typing_start", { groupId: "550e8400-..." });
+socket.emit("group_typing_stop", { groupId: "550e8400-..." });
+
+// Other group members receive:
+socket.on("group_typing_start", (data) => {
+  // { groupId: string, from: string }
+});
+socket.on("group_typing_stop", (data) => {
+  // { groupId: string, from: string }
+});
+```
+
+### Querying Group Data
+
+```typescript
+// Get members of a group:
+socket.emit("get_group_members", { groupId: "550e8400-..." });
+socket.on("group_members", (data) => {
+  // { groupId: string, members: GroupMember[] }
+});
+
+// Get all groups the current user belongs to:
+socket.emit("get_user_groups");
+socket.on("user_groups", (data) => {
+  // { groups: Group[] }
+});
+
+// Get message history:
+socket.emit("get_group_message_history", {
+  groupId: "550e8400-...",
+  limit: 50,    // optional, default 50
+  before: 1707300000000, // optional timestamp cursor for pagination
+});
+socket.on("group_message_history", (data) => {
+  // { groupId: string, messages: PersistedMessage[] }
+});
+```
+
+---
+
+## Voice Calling
+
+Enable WebRTC peer-to-peer voice calls. The server handles only signaling (SDP offers/answers and ICE candidates) — media never passes through the server.
+
+```typescript
+const server = new SocketServer({
+  voice: {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    turn: {
+      urls: "turn:turn.example.com:3478",
+      secret: "my-coturn-static-secret",
+      ttl: 3600,
+    },
+  },
+})
+  .createStandalone()
+  .useAuth(authHandler)
+  .useVoice();
+
+await server.listen(3000);
+```
+
+### VoiceConfig
+
+| Field        | Type                          | Description                                              |
+| ------------ | ----------------------------- | -------------------------------------------------------- |
+| `iceServers` | `IceServer[]`                 | Static STUN/TURN servers always included in ICE list     |
+| `turn`       | `TurnConfig`                  | TURN server with HMAC-SHA1 credential generation         |
+
+**`TurnConfig`:**
+
+| Field    | Type                   | Default | Description                                   |
+| -------- | ---------------------- | ------- | --------------------------------------------- |
+| `urls`   | `string \| string[]`   | —       | TURN server URL(s)                            |
+| `secret` | `string`               | —       | Shared TURN secret (never sent to the client) |
+| `ttl`    | `number`               | `3600`  | Credential lifetime in seconds                |
+
+HMAC-SHA1 credentials are generated per user on each request. The format is `username = "${expiry}:${userId}"`, `credential = HMAC-SHA1(secret, username)`.
+
+### Getting ICE Servers
+
+Clients should fetch ICE servers before initiating a call:
+
+```typescript
+// Client sends:
+socket.emit("call_get_ice_servers");
+
+// Client receives:
+socket.on("call_ice_servers", (data) => {
+  console.log(data.iceServers);
+  // [
+  //   { urls: "stun:stun.l.google.com:19302" },
+  //   { urls: "turn:turn.example.com:3478", username: "1707303600:user-1", credential: "..." }
+  // ]
+});
+```
+
+### Initiating a Call
+
+```typescript
+// Caller sends:
+socket.emit("call_initiate", {
+  to: "callee-user-id",
+  sdpOffer: offer.sdp, // RTCSessionDescription SDP string
+});
+
+// Caller receives (call is ringing):
+socket.on("call_ringing", (data) => {
+  // { callId: string }
+});
+
+// Callee receives on ALL their connected devices:
+socket.on("call_incoming", (data) => {
+  // {
+  //   callId: string,
+  //   from: string,
+  //   sdpOffer: string,
+  //   iceServers: IceServer[]  // fresh credentials for the callee
+  // }
+});
+
+// If callee is already in a call:
+socket.on("call_busy", (data) => {
+  // { callId: string }
+});
+
+// If callee is offline:
+socket.on("call_ended", (data) => {
+  // { callId: string }  (callId is empty string when callee is offline)
+});
+```
+
+### Answering a Call
+
+```typescript
+// Callee sends:
+socket.emit("call_answer", {
+  callId: "call-uuid",
+  sdpAnswer: answer.sdp,
+});
+
+// Caller receives on ALL their connected devices:
+socket.on("call_answered", (data) => {
+  // { callId: string, sdpAnswer: string }
+});
+```
+
+### Rejecting a Call
+
+```typescript
+// Callee sends:
+socket.emit("call_reject", { callId: "call-uuid" });
+
+// Caller receives:
+socket.on("call_rejected", (data) => {
+  // { callId: string }
+});
+```
+
+### Hanging Up
+
+```typescript
+// Either party sends:
+socket.emit("call_hangup", { callId: "call-uuid" });
+
+// The other party receives:
+socket.on("call_ended", (data) => {
+  // { callId: string }
+});
+```
+
+### ICE Candidates
+
+Exchange ICE candidates throughout the call setup:
+
+```typescript
+// Either party sends:
+socket.emit("call_ice_candidate", {
+  callId: "call-uuid",
+  candidate: {
+    candidate: "candidate:...",
+    sdpMid: "0",
+    sdpMLineIndex: 0,
+  },
+});
+
+// The other party receives the same event:
+socket.on("call_ice_candidate", (data) => {
+  // { callId: string, candidate: IceCandidateInit }
+});
+```
+
+### Automatic Cleanup
+
+When a user's **last** socket disconnects, all active or ringing calls they are in are ended automatically. The other party receives `call_ended`.
+
+---
+
 ## Connection Management
 
 The `ConnectionManager` tracks all active connections with dual-map lookups by socket ID and user ID.
@@ -556,7 +904,7 @@ await server.listen(3000);
 
 ### Plugin Lifecycle
 
-```
+```text
 new SocketServer()                → Config stored, ConnectionManager created
 server.createStandalone()         → HTTP server + Socket.IO created, connection handler set up
   (or server.attach(httpServer))
@@ -581,28 +929,68 @@ this.connectionManager // ConnectionManager — for looking up connections
 
 ### Client → Server
 
-| Event                | Payload                                               | Requires Auth | Plugin    |
-| -------------------- | ----------------------------------------------------- | ------------- | --------- |
-| `authenticate`       | `{ token: string }`                                   | No            | Auth      |
-| `get_online_status`  | `{ userIds: string[] }`                               | No            | Presence  |
-| `send_message`       | `{ to: string, content: string, metadata?: object }`  | Yes           | Message   |
-| `typing_start`       | `{ to: string }`                                      | Yes           | Message   |
-| `typing_stop`        | `{ to: string }`                                      | Yes           | Message   |
+| Event                          | Payload                                                                     | Requires Auth | Plugin   |
+| ------------------------------ | --------------------------------------------------------------------------- | ------------- | -------- |
+| `authenticate`                 | `{ token: string }`                                                         | No            | Auth     |
+| `get_online_status`            | `{ userIds: string[] }`                                                     | No            | Presence |
+| `send_message`                 | `{ to: string, content: string, metadata?: object }`                        | Yes           | Message |
+| `typing_start`                 | `{ to: string }`                                                            | Yes           | Message |
+| `typing_stop`                  | `{ to: string }`                                                            | Yes           | Message |
+| `group_create`                 | `{ name: string, members?: string[], metadata?: object }`                   | Yes           | Group   |
+| `group_join`                   | `{ groupId: string }`                                                       | Yes           | Group   |
+| `group_leave`                  | `{ groupId: string }`                                                       | Yes           | Group   |
+| `group_send_message`           | `{ groupId: string, content: string, metadata?: object }`                   | Yes           | Group   |
+| `group_message_read`           | `{ groupId: string, messageId: string }`                                    | Yes           | Group   |
+| `group_typing_start`           | `{ groupId: string }`                                                       | Yes           | Group   |
+| `group_typing_stop`            | `{ groupId: string }`                                                       | Yes           | Group   |
+| `get_group_members`            | `{ groupId: string }`                                                       | Yes           | Group   |
+| `get_user_groups`              | `{}`                                                                        | Yes           | Group   |
+| `get_group_message_history`    | `{ groupId: string, limit?: number, before?: number }`                      | Yes           | Group   |
+| `call_get_ice_servers`         | `{}`                                                                        | Yes           | Voice   |
+| `call_initiate`                | `{ to: string, sdpOffer: string }`                                          | Yes           | Voice   |
+| `call_answer`                  | `{ callId: string, sdpAnswer: string }`                                     | Yes           | Voice   |
+| `call_reject`                  | `{ callId: string }`                                                        | Yes           | Voice   |
+| `call_hangup`                  | `{ callId: string }`                                                        | Yes           | Voice   |
+| `call_ice_candidate`           | `{ callId: string, candidate: IceCandidateInit }`                           | Yes           | Voice   |
 
 ### Server → Client
 
-| Event                | Payload                                                                       | Recipient     | Plugin    |
-| -------------------- | ----------------------------------------------------------------------------- | ------------- | --------- |
-| `authenticated`      | `{ userId: string, socketId: string }`                                        | Sender        | Auth      |
-| `auth_error`         | `{ message: string }`                                                         | Sender        | Auth      |
-| `user_online`        | `{ userId: string }`                                                          | All clients   | Presence  |
-| `user_offline`       | `{ userId: string }`                                                          | All clients   | Presence  |
-| `online_status`      | `{ statuses: Record<string, boolean> }`                                       | Sender        | Presence  |
-| `receive_message`    | `{ from: string, content: string, timestamp: number, messageId: string, metadata?: object }` | Recipient | Message |
-| `message_delivered`  | `{ messageId: string }`                                                       | Sender        | Message   |
-| `message_error`      | `{ messageId?: string, error: string }`                                       | Sender        | Message   |
-| `typing_start`       | `{ from: string }`                                                            | Recipient     | Message   |
-| `typing_stop`        | `{ from: string }`                                                            | Recipient     | Message   |
+| Event                    | Payload                                                                                      | Recipient       | Plugin   |
+| ------------------------ | -------------------------------------------------------------------------------------------- | --------------- | -------- |
+| `authenticated`          | `{ userId: string, socketId: string }`                                                       | Sender          | Auth     |
+| `auth_error`             | `{ message: string }`                                                                        | Sender          | Auth     |
+| `user_online`            | `{ userId: string }`                                                                         | All clients     | Presence |
+| `user_offline`           | `{ userId: string }`                                                                         | All clients     | Presence |
+| `online_status`          | `{ statuses: Record<string, boolean> }`                                                      | Sender          | Presence |
+| `receive_message`        | `{ from: string, content: string, timestamp: number, messageId: string, metadata?: object }` | Recipient       | Message  |
+| `message_delivered`      | `{ messageId: string }`                                                                      | Sender          | Message  |
+| `message_error`          | `{ messageId?: string, error: string }`                                                      | Sender          | Message  |
+| `typing_start`           | `{ from: string }`                                                                           | Recipient       | Message  |
+| `typing_stop`            | `{ from: string }`                                                                           | Recipient       | Message  |
+| `group_created`          | `{ group: Group }`                                                                           | Sender          | Group    |
+| `group_create_error`     | `{ error: string }`                                                                          | Sender          | Group    |
+| `group_joined`           | `{ groupId: string, group: Group, queuedMessages: PersistedMessage[] }`                      | Sender          | Group    |
+| `group_join_error`       | `{ groupId: string, error: string }`                                                         | Sender          | Group    |
+| `group_member_joined`    | `{ groupId: string, member: GroupMember }`                                                   | Room (others)   | Group    |
+| `group_left`             | `{ groupId: string }`                                                                        | Sender          | Group    |
+| `group_member_left`      | `{ groupId: string, userId: string }`                                                        | Room (all)      | Group    |
+| `group_receive_message`  | `{ groupId: string, messageId: string, from: string, content: string, timestamp: number, metadata?: object }` | Room (all) | Group |
+| `group_message_delivered`| `{ groupId: string, messageId: string }`                                                     | Sender          | Group    |
+| `group_message_error`    | `{ groupId: string, messageId?: string, error: string }`                                     | Sender          | Group    |
+| `group_message_read`     | `{ groupId: string, messageId: string }`                                                     | Room (others)   | Group    |
+| `group_typing_start`     | `{ groupId: string, from: string }`                                                          | Room (others)   | Group    |
+| `group_typing_stop`      | `{ groupId: string, from: string }`                                                          | Room (others)   | Group    |
+| `group_members`          | `{ groupId: string, members: GroupMember[] }`                                                | Sender          | Group    |
+| `user_groups`            | `{ groups: Group[] }`                                                                        | Sender          | Group    |
+| `group_message_history`  | `{ groupId: string, messages: PersistedMessage[] }`                                          | Sender          | Group    |
+| `call_ice_servers`       | `{ iceServers: IceServer[] }`                                                                | Sender          | Voice    |
+| `call_ringing`           | `{ callId: string }`                                                                         | Caller          | Voice    |
+| `call_incoming`          | `{ callId: string, from: string, sdpOffer: string, iceServers: IceServer[] }`                | All callee devices | Voice |
+| `call_busy`              | `{ callId: string }`                                                                         | Caller          | Voice    |
+| `call_answered`          | `{ callId: string, sdpAnswer: string }`                                                      | All caller devices | Voice |
+| `call_rejected`          | `{ callId: string }`                                                                         | All caller devices | Voice |
+| `call_ended`             | `{ callId: string }`                                                                         | Other party     | Voice    |
+| `call_ice_candidate`     | `{ callId: string, candidate: IceCandidateInit }`                                            | Other party     | Voice    |
 
 ---
 
@@ -615,27 +1003,38 @@ this.connectionManager // ConnectionManager — for looking up connections
 | `AuthHandler` returns `null`    | `auth_error` | `{ message: "Invalid authentication token" }` | Yes                 |
 | `AuthHandler` throws an error   | `auth_error` | `{ message: "Authentication failed" }`        | Yes                 |
 
-### Message Errors
+### Direct Message Errors
 
-| Scenario                   | Event           | Payload                                             |
-| -------------------------- | --------------- | --------------------------------------------------- |
-| Sender not authenticated   | `message_error` | `{ error: "Not authenticated" }`                    |
-| Sender user ID unresolved  | `message_error` | `{ error: "Invalid user" }`                         |
-| Recipient is offline       | `message_error` | `{ messageId: string, error: "Recipient is offline" }` |
+| Scenario                   | Event           | Payload                                                   |
+| -------------------------- | --------------- | --------------------------------------------------------- |
+| Sender not authenticated   | `message_error` | `{ error: "Not authenticated" }`                          |
+| Sender user ID unresolved  | `message_error` | `{ error: "Invalid user" }`                               |
+| Recipient is offline       | `message_error` | `{ messageId: string, error: "Recipient is offline" }`    |
+
+### Group Messaging Errors
+
+| Scenario                         | Event                 | Payload                                           |
+| -------------------------------- | --------------------- | ------------------------------------------------- |
+| Not authenticated (create)       | `group_create_error`  | `{ error: "Not authenticated" }`                  |
+| Store failure (create)           | `group_create_error`  | `{ error: "Failed to create group" }`             |
+| Not authenticated (join)         | `group_join_error`    | `{ groupId: string, error: "Not authenticated" }` |
+| Group not found (join)           | `group_join_error`    | `{ groupId: string, error: "Group not found" }`   |
+| Store failure (join)             | `group_join_error`    | `{ groupId: string, error: "Failed to join group" }` |
+| Not authenticated (send)         | `group_message_error` | `{ groupId: string, error: "Not authenticated" }` |
+| Sender not a member              | `group_message_error` | `{ groupId: string, error: "Not a member of this group" }` |
+| Store failure (send)             | `group_message_error` | `{ groupId: string, messageId: string, error: "Failed to save message" }` |
 
 ### Typing Indicator Errors
 
-Typing indicators **fail silently**. No error event is emitted if:
-- The sender is not authenticated.
-- The recipient is offline.
+Typing indicators (both direct and group) **fail silently**. No error event is emitted if the sender is not authenticated or the recipient/group is unreachable.
 
 ### Initialization Errors
 
-| Scenario                                           | Error                                                                 |
-| -------------------------------------------------- | --------------------------------------------------------------------- |
-| Calling `useAuth`/`usePresence`/`useMessaging` before `attach`/`createStandalone` | `"Socket.IO server not initialized"` |
-| Calling `attach`/`createStandalone` twice          | `"Socket.IO server already initialized"`                              |
-| Calling `initialize()` before `attach`/`createStandalone` | `"Socket.IO server not initialized. Call attach() or createStandalone() first."` |
+| Scenario                                                                        | Error                                                                              |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Calling `useAuth`/`usePresence`/`useMessaging` before `attach`/`createStandalone` | `"Socket.IO server not initialized"`                                             |
+| Calling `attach`/`createStandalone` twice                                       | `"Socket.IO server already initialized"`                                           |
+| Calling `initialize()` before `attach`/`createStandalone`                       | `"Socket.IO server not initialized. Call attach() or createStandalone() first."` |
 
 ---
 
