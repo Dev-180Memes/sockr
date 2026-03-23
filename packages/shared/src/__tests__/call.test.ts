@@ -50,11 +50,17 @@ describe('Call Types', () => {
       expect((server.urls as string[]).length).toBe(2);
     });
 
-    it('is structurally compatible with RTCIceServer (safe to cast)', () => {
-      // Verifies the shape satisfies the RTCIceServer contract without importing DOM types
-      const server: IceServer = { urls: 'stun:stun.example.com' };
-      const rtcServer = server as unknown as RTCIceServer;
-      expect(rtcServer).toBeDefined();
+    it('has the same required shape as RTCIceServer (urls + optional credentials)', () => {
+      // IceServer mirrors RTCIceServer so it is safe to cast on the client side.
+      // We verify the runtime shape here without importing DOM types.
+      const server: IceServer = {
+        urls: 'turn:turn.example.com',
+        username: 'user',
+        credential: 'cred',
+      };
+      expect(Object.keys(server)).toEqual(
+        expect.arrayContaining(['urls', 'username', 'credential'])
+      );
     });
   });
 

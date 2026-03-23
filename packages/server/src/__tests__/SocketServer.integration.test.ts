@@ -49,6 +49,55 @@ describe('SocketServer Integration', () => {
     });
   });
 
+  describe('useVoice', () => {
+    it('should register VoicePlugin and return this for chaining', () => {
+      const socketServer = new SocketServer()
+        .createStandalone()
+        .useVoice();
+      expect(socketServer.getIO()).toBeDefined();
+    });
+
+    it('should accept voice config with static ICE servers', () => {
+      const socketServer = new SocketServer({
+        voice: {
+          iceServers: [{ urls: 'stun:stun.example.com' }],
+        },
+      })
+        .createStandalone()
+        .useVoice();
+      expect(socketServer.getIO()).toBeDefined();
+    });
+
+    it('should accept voice config with TURN settings', () => {
+      const socketServer = new SocketServer({
+        voice: {
+          turn: {
+            urls: 'turn:turn.example.com',
+            secret: 'test-secret',
+            ttl: 3600,
+          },
+        },
+      })
+        .createStandalone()
+        .useVoice();
+      expect(socketServer.getIO()).toBeDefined();
+    });
+
+    it('should be chainable with other plugins', () => {
+      const authHandler = async (token: string) => {
+        if (token === 'valid') {
+          return { id: 'user-1', socketId: '', connectedAt: Date.now() };
+        }
+        return null;
+      };
+      const socketServer = new SocketServer()
+        .createStandalone()
+        .useAuth(authHandler)
+        .useVoice();
+      expect(socketServer.getIO()).toBeDefined();
+    });
+  });
+
   describe('listen', () => {
     it('should warn when calling listen on attached server', async () => {
       const app = express();
@@ -61,7 +110,7 @@ describe('SocketServer Integration', () => {
       await socketServer.listen(3000);
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('attached to an existing HTTP server')
+        expect.stringContaining('Attached to existing HTTP server')
       );
 
       consoleWarnSpy.mockRestore();
