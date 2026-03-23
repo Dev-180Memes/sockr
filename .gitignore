@@ -7,3 +7,6 @@ build/
 coverage/
 .turbo/
 .claude
+
+docs/brainstorms/
+docs/plans/

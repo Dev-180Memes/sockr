@@ -73,6 +73,16 @@ export enum SocketEvent {
   CALL_ENDED = 'call_ended',
   CALL_BUSY = 'call_busy',
   CALL_ICE_CANDIDATE = 'call_ice_candidate',
+
+  // Conference calling — SFU-based group audio/video
+  CONFERENCE_JOIN = 'conference_join',
+  CONFERENCE_LEAVE = 'conference_leave',
+  CONFERENCE_TOKEN = 'conference_token',
+  CONFERENCE_STARTED = 'conference_started',
+  CONFERENCE_ENDED = 'conference_ended',
+  CONFERENCE_PARTICIPANT_JOINED = 'conference_participant_joined',
+  CONFERENCE_PARTICIPANT_LEFT = 'conference_participant_left',
+  CONFERENCE_ERROR = 'conference_error',
 }
 
 export interface EventPayloads {
@@ -272,5 +282,35 @@ export interface EventPayloads {
   [SocketEvent.CALL_ICE_CANDIDATE]: {
     callId: string;
     candidate: import('./call').IceCandidateInit;
+  };
+
+  // ── Conference calling ─────────────────────────────────────────────────────
+
+  [SocketEvent.CONFERENCE_JOIN]: { groupId: string };
+  [SocketEvent.CONFERENCE_LEAVE]: { groupId: string };
+  [SocketEvent.CONFERENCE_TOKEN]: {
+    groupId: string;
+    sfuUrl: string;
+    token: string;
+  };
+  [SocketEvent.CONFERENCE_STARTED]: {
+    groupId: string;
+    startedBy: string;
+    participantCount: number;
+  };
+  [SocketEvent.CONFERENCE_ENDED]: { groupId: string };
+  [SocketEvent.CONFERENCE_PARTICIPANT_JOINED]: {
+    groupId: string;
+    userId: string;
+    participantCount: number;
+  };
+  [SocketEvent.CONFERENCE_PARTICIPANT_LEFT]: {
+    groupId: string;
+    userId: string;
+    participantCount: number;
+  };
+  [SocketEvent.CONFERENCE_ERROR]: {
+    groupId: string;
+    error: string;
   };
 }

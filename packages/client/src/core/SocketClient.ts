@@ -242,6 +242,31 @@ export class SocketClient {
     this.socket.on(SocketEvent.CALL_ICE_CANDIDATE, (data: EventPayloads[SocketEvent.CALL_ICE_CANDIDATE]) => {
       this.eventEmitter.emit('call_ice_candidate', data);
     });
+
+    // ── Conference events ─────────────────────────────────────────────────
+    this.socket.on(SocketEvent.CONFERENCE_TOKEN, (data: EventPayloads[SocketEvent.CONFERENCE_TOKEN]) => {
+      this.eventEmitter.emit('conference_token', data);
+    });
+
+    this.socket.on(SocketEvent.CONFERENCE_STARTED, (data: EventPayloads[SocketEvent.CONFERENCE_STARTED]) => {
+      this.eventEmitter.emit('conference_started', data);
+    });
+
+    this.socket.on(SocketEvent.CONFERENCE_ENDED, (data: EventPayloads[SocketEvent.CONFERENCE_ENDED]) => {
+      this.eventEmitter.emit('conference_ended', data);
+    });
+
+    this.socket.on(SocketEvent.CONFERENCE_PARTICIPANT_JOINED, (data: EventPayloads[SocketEvent.CONFERENCE_PARTICIPANT_JOINED]) => {
+      this.eventEmitter.emit('conference_participant_joined', data);
+    });
+
+    this.socket.on(SocketEvent.CONFERENCE_PARTICIPANT_LEFT, (data: EventPayloads[SocketEvent.CONFERENCE_PARTICIPANT_LEFT]) => {
+      this.eventEmitter.emit('conference_participant_left', data);
+    });
+
+    this.socket.on(SocketEvent.CONFERENCE_ERROR, (data: EventPayloads[SocketEvent.CONFERENCE_ERROR]) => {
+      this.eventEmitter.emit('conference_error', data);
+    });
   }
 
   // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -387,6 +412,18 @@ export class SocketClient {
   public sendIceCandidate(callId: string, candidate: EventPayloads[typeof SocketEvent.CALL_ICE_CANDIDATE]['candidate']): void {
     this.assertAuthenticated();
     this.socket!.emit(SocketEvent.CALL_ICE_CANDIDATE, { callId, candidate } as EventPayloads[SocketEvent.CALL_ICE_CANDIDATE]);
+  }
+
+  // ─── Conference calling ────────────────────────────────────────────────────
+
+  public joinConference(groupId: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CONFERENCE_JOIN, { groupId } as EventPayloads[SocketEvent.CONFERENCE_JOIN]);
+  }
+
+  public leaveConference(groupId: string): void {
+    this.assertAuthenticated();
+    this.socket!.emit(SocketEvent.CONFERENCE_LEAVE, { groupId } as EventPayloads[SocketEvent.CONFERENCE_LEAVE]);
   }
 
   // ─── Event subscriptions ──────────────────────────────────────────────────
