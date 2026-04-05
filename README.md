@@ -97,6 +97,10 @@ function Chat() {
 - [Shared Types Documentation](packages/shared/Documentation.md)
 - [Changelog](CHANGELOG.md)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, commit conventions, and the release process.
+
 ## License
 
 MIT
