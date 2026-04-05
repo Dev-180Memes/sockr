@@ -223,9 +223,8 @@ await server.listen();</code></pre>
 function App() {
   return (
     &lt;SocketProvider
-      url="http://localhost:3000"
-      token={authToken}      // triggers authenticate() on connect
-      autoConnect={true}     // default: true
+      config={{ url: "http://localhost:3000", autoConnect: true }}
+      token={authToken}
     &gt;
       &lt;YourApp /&gt;
     &lt;/SocketProvider&gt;
@@ -431,25 +430,19 @@ server
 await server.listen();</code></pre>
 
     <h3>Client (React)</h3>
-    <pre><code>import { useVoiceCall, useSocketEvent } from 'sockr-client/react';
+    <pre><code>import { useVoiceCall } from 'sockr-client/react';
 
 function CallUI({ remoteUserId }: { remoteUserId: string }) {
   const {
-    callState,
+    callState,    // 'idle' | 'calling' | 'ringing' | 'active' | 'busy' | 'ended'
+    incomingCall, // IncomingCall | null — set when another user calls you
     localStream,
     remoteStream,
     startCall,
-    answerCall,
-    rejectCall,
+    answerCall,   // () => Promise&lt;void&gt; — accepts incomingCall automatically
+    rejectCall,   // () => void
     hangUp,
   } = useVoiceCall({ video: false });
-
-  // Handle incoming calls
-  useSocketEvent('call_incoming', async ({ callId, sdpOffer, iceServers }) => {
-    // Show incoming call UI, then:
-    await answerCall(callId, sdpOffer, iceServers);
-    // or: rejectCall(callId);
-  });
 
   // Attach remote stream to an &lt;audio&gt; element
   const audioRef = useRef&lt;HTMLAudioElement&gt;(null);
@@ -463,10 +456,17 @@ function CallUI({ remoteUserId }: { remoteUserId: string }) {
     &lt;div&gt;
       &lt;p&gt;Call state: {callState}&lt;/p&gt;
       &lt;audio ref={audioRef} autoPlay /&gt;
-      {callState === 'IDLE' &amp;&amp; (
+      {incomingCall &amp;&amp; (
+        &lt;div&gt;
+          &lt;p&gt;{incomingCall.from} is calling...&lt;/p&gt;
+          &lt;button onClick={answerCall}&gt;Answer&lt;/button&gt;
+          &lt;button onClick={rejectCall}&gt;Reject&lt;/button&gt;
+        &lt;/div&gt;
+      )}
+      {callState === 'idle' &amp;&amp; !incomingCall &amp;&amp; (
         &lt;button onClick={() =&gt; startCall(remoteUserId)}&gt;Call&lt;/button&gt;
       )}
-      {callState !== 'IDLE' &amp;&amp; (
+      {callState === 'active' &amp;&amp; (
         &lt;button onClick={hangUp}&gt;Hang Up&lt;/button&gt;
       )}
     &lt;/div&gt;
@@ -499,15 +499,14 @@ server
 await server.listen();</code></pre>
 
     <h3>Client (React)</h3>
-    <pre><code>import { useConferenceCall } from 'sockr-client/react';
-import { LiveKitClientAdapter } from 'sockr-client/adapters/livekit';
+    <pre><code>import { useConferenceCall, LiveKitClientAdapter } from 'sockr-client';
 // npm install livekit-client
 
 const adapter = new LiveKitClientAdapter();
 
 function GroupCall({ groupId }: { groupId: string }) {
   const { conferenceState, participants, joinConference, leaveConference, onRemoteTrack } =
-    useConferenceCall(adapter);
+    useConferenceCall({ adapter, audio: true, video: true });
 
   // Attach incoming audio/video tracks
   onRemoteTrack((track, participantId) => {
@@ -518,14 +517,14 @@ function GroupCall({ groupId }: { groupId: string }) {
   return (
     &lt;div&gt;
       &lt;p&gt;Conference: {conferenceState}&lt;/p&gt;
-      &lt;p&gt;Participants: {participants.join(', ')}&lt;/p&gt;
-      {participants.map(id =&gt; (
-        &lt;video key={id} id={`media-${id}`} autoPlay playsInline /&gt;
+      &lt;p&gt;Participants: {participants.length}&lt;/p&gt;
+      {participants.map(p =&gt; (
+        &lt;video key={p.userId} id={`media-${p.userId}`} autoPlay playsInline /&gt;
       ))}
-      {conferenceState === 'IDLE' ? (
+      {conferenceState === 'idle' ? (
         &lt;button onClick={() =&gt; joinConference(groupId)}&gt;Join Call&lt;/button&gt;
       ) : (
-        &lt;button onClick={() =&gt; leaveConference(groupId)}&gt;Leave Call&lt;/button&gt;
+        &lt;button onClick={leaveConference}&gt;Leave Call&lt;/button&gt;
       )}
     &lt;/div&gt;
   );

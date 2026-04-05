@@ -95,6 +95,7 @@ function Chat() {
 - [Server Documentation](packages/server/Documentation.md)
 - [Client Documentation](packages/client/Documentation.md)
 - [Shared Types Documentation](packages/shared/Documentation.md)
+- [Changelog](CHANGELOG.md)
 
 ## License
 

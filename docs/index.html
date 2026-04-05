@@ -257,7 +257,7 @@ import {
 function App() {
   return (
     &lt;SocketProvider
-      url="http://localhost:3000"
+      config={{ url: "http://localhost:3000" }}
       token={authToken}
     &gt;
       &lt;Chat /&gt;
