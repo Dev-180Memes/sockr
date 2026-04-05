@@ -70,6 +70,8 @@
       <div class="sidebar-group-label">Examples</div>
       <a href="#first-message" class="sidebar-link">First Message</a>
       <a href="#group-chat" class="sidebar-link">Group Chat</a>
+      <a href="#voice-calling" class="sidebar-link">Voice Calling</a>
+      <a href="#conference-calling" class="sidebar-link">Conference Calling</a>
       <a href="#with-persistence" class="sidebar-link">With Persistence</a>
     </div>
     <div class="sidebar-group">
@@ -230,7 +232,7 @@ function App() {
   );
 }</code></pre>
 
-    <p>All 10 hooks are then available anywhere inside the provider:</p>
+    <p>All 12 hooks are then available anywhere inside the provider:</p>
 
     <pre><code>import {
   useSocket,
@@ -398,6 +400,133 @@ function GroupChat({ groupId }: { groupId: string }) {
         placeholder="Type a message..."
       /&gt;
       &lt;button onClick={() =&gt; sendMessage('Hello group!')}&gt;Send&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <!-- Voice calling -->
+    <h2 id="voice-calling">Voice Calling Example</h2>
+    <p>Enable P2P calling on the server with a STUN server, then use <code>useVoiceCall</code> and <code>useSocketEvent</code> on the client:</p>
+
+    <h3>Server</h3>
+    <pre><code>import { SocketServer } from 'sockr-server';
+
+const server = new SocketServer({
+  port: 3000,
+  voice: {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    // Optional: Coturn TURN server for clients behind strict NATs
+    turn: {
+      urls: 'turn:turn.example.com:3478',
+      secret: process.env.TURN_SECRET!,
+    },
+  },
+});
+
+server
+  .createStandalone()
+  .useAuth(authHandler)
+  .useVoice();  // registers the signaling plugin
+
+await server.listen();</code></pre>
+
+    <h3>Client (React)</h3>
+    <pre><code>import { useVoiceCall, useSocketEvent } from 'sockr-client/react';
+
+function CallUI({ remoteUserId }: { remoteUserId: string }) {
+  const {
+    callState,
+    localStream,
+    remoteStream,
+    startCall,
+    answerCall,
+    rejectCall,
+    hangUp,
+  } = useVoiceCall({ video: false });
+
+  // Handle incoming calls
+  useSocketEvent('call_incoming', async ({ callId, sdpOffer, iceServers }) => {
+    // Show incoming call UI, then:
+    await answerCall(callId, sdpOffer, iceServers);
+    // or: rejectCall(callId);
+  });
+
+  // Attach remote stream to an &lt;audio&gt; element
+  const audioRef = useRef&lt;HTMLAudioElement&gt;(null);
+  useEffect(() => {
+    if (audioRef.current &amp;&amp; remoteStream) {
+      audioRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Call state: {callState}&lt;/p&gt;
+      &lt;audio ref={audioRef} autoPlay /&gt;
+      {callState === 'IDLE' &amp;&amp; (
+        &lt;button onClick={() =&gt; startCall(remoteUserId)}&gt;Call&lt;/button&gt;
+      )}
+      {callState !== 'IDLE' &amp;&amp; (
+        &lt;button onClick={hangUp}&gt;Hang Up&lt;/button&gt;
+      )}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+    <!-- Conference calling -->
+    <h2 id="conference-calling">Conference Calling Example</h2>
+    <p>Enable SFU group calling on the server with LiveKit, then use <code>useConferenceCall</code> on the client:</p>
+
+    <h3>Server</h3>
+    <pre><code>import { SocketServer, LiveKitSFUProvider } from 'sockr-server';
+// npm install livekit-server-sdk
+
+const server = new SocketServer({ port: 3000 });
+
+server
+  .createStandalone()
+  .useAuth(authHandler)
+  .useGroupMessaging()
+  .useConference(
+    new LiveKitSFUProvider({
+      apiKey: process.env.LIVEKIT_API_KEY!,
+      apiSecret: process.env.LIVEKIT_API_SECRET!,
+      host: 'https://your-livekit.example.com',
+    }),
+    'wss://your-livekit.example.com'
+  );
+
+await server.listen();</code></pre>
+
+    <h3>Client (React)</h3>
+    <pre><code>import { useConferenceCall } from 'sockr-client/react';
+import { LiveKitClientAdapter } from 'sockr-client/adapters/livekit';
+// npm install livekit-client
+
+const adapter = new LiveKitClientAdapter();
+
+function GroupCall({ groupId }: { groupId: string }) {
+  const { conferenceState, participants, joinConference, leaveConference, onRemoteTrack } =
+    useConferenceCall(adapter);
+
+  // Attach incoming audio/video tracks
+  onRemoteTrack((track, participantId) => {
+    const el = document.getElementById(`media-${participantId}`) as HTMLVideoElement;
+    if (el) el.srcObject = new MediaStream([track]);
+  });
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Conference: {conferenceState}&lt;/p&gt;
+      &lt;p&gt;Participants: {participants.join(', ')}&lt;/p&gt;
+      {participants.map(id =&gt; (
+        &lt;video key={id} id={`media-${id}`} autoPlay playsInline /&gt;
+      ))}
+      {conferenceState === 'IDLE' ? (
+        &lt;button onClick={() =&gt; joinConference(groupId)}&gt;Join Call&lt;/button&gt;
+      ) : (
+        &lt;button onClick={() =&gt; leaveConference(groupId)}&gt;Leave Call&lt;/button&gt;
+      )}
     &lt;/div&gt;
   );
 }</code></pre>
