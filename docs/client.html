@@ -368,10 +368,8 @@ const client = new SocketClient(config: ClientConfig);</code></pre>
 function App() {
   return (
     &lt;SocketProvider
-      url="http://localhost:3000"
-      token={authToken}      // optional: triggers authenticate() on connect
-      autoConnect={true}     // default: true
-      transports={['websocket']}
+      config={{ url: "http://localhost:3000", transports: ['websocket'] }}
+      token={authToken}
     &gt;
       {children}
     &lt;/SocketProvider&gt;
@@ -625,23 +623,26 @@ groups.map(g =&gt; (
       <div class="hook-card-body">
         <p>Full WebRTC P2P call lifecycle. Manages <code>RTCPeerConnection</code>, ICE candidate buffering, and local/remote media streams. Supports audio-only or audio+video calls.</p>
         <pre><code>const {
-  callState,     // CallState enum
+  callState,     // CallState — see values below
+  incomingCall,  // IncomingCall | null — set when another user calls you
   localStream,   // MediaStream | null
   remoteStream,  // MediaStream | null
-  startCall,     // (toUserId: string) => Promise&lt;void&gt;
-  answerCall,    // (callId: string, sdpOffer: string, iceServers: IceServer[]) => Promise&lt;void&gt;
-  rejectCall,    // (callId: string) => void
+  currentCallId, // string | null
+  startCall,     // (userId: string) => Promise&lt;void&gt;
+  answerCall,    // () => Promise&lt;void&gt; — reads from incomingCall automatically
+  rejectCall,    // () => void
   hangUp,        // () => void
 } = useVoiceCall({ video: false }); // video: false is the default
 
 // Initiate a call
 await startCall('user-456');
 
-// Incoming call (listen to call_incoming, then answerCall or rejectCall)
-useSocketEvent('call_incoming', async ({ callId, from, sdpOffer, iceServers }) => {
-  await answerCall(callId, sdpOffer, iceServers);
-  // or rejectCall(callId);
-});</code></pre>
+// Incoming call — incomingCall is set automatically by the hook
+if (incomingCall) {
+  // Show UI: incomingCall.from, then:
+  await answerCall(); // accepts the call
+  // or: rejectCall();
+}</code></pre>
 
         <h4>Options</h4>
         <div class="table-wrap">
@@ -653,16 +654,18 @@ useSocketEvent('call_incoming', async ({ callId, from, sdpOffer, iceServers }) =
           </table>
         </div>
 
-        <h4>CallState enum</h4>
+        <h4>CallState</h4>
+        <p><code>type CallState = 'idle' | 'calling' | 'ringing' | 'active' | 'busy' | 'ended'</code></p>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Value</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td><code>IDLE</code></td><td>No active or pending call.</td></tr>
-              <tr><td><code>CALLING</code></td><td>Outgoing call initiated, waiting for answer.</td></tr>
-              <tr><td><code>RINGING</code></td><td>Incoming call received — user can answer or reject.</td></tr>
-              <tr><td><code>CONNECTED</code></td><td>Call is active, media is flowing.</td></tr>
-              <tr><td><code>ENDED</code></td><td>Call ended (briefly, before resetting to IDLE).</td></tr>
+              <tr><td><code>'idle'</code></td><td>No active or pending call.</td></tr>
+              <tr><td><code>'calling'</code></td><td>Outgoing call initiated, waiting for ringing confirmation.</td></tr>
+              <tr><td><code>'ringing'</code></td><td>Caller: callee's device is ringing. Callee: incoming call received.</td></tr>
+              <tr><td><code>'active'</code></td><td>Call is connected, media is flowing.</td></tr>
+              <tr><td><code>'busy'</code></td><td>Callee was already in a call.</td></tr>
+              <tr><td><code>'ended'</code></td><td>Call just ended (transitions back to <code>'idle'</code> on cleanup).</td></tr>
             </tbody>
           </table>
         </div>
@@ -678,18 +681,20 @@ useSocketEvent('call_incoming', async ({ callId, from, sdpOffer, iceServers }) =
       </div>
       <div class="hook-card-body">
         <p>SFU-based group conference calling. Handles join/leave, SFU connection lifecycle, and participant tracking. Pass an <code>ISFUClientAdapter</code> instance — use the included <code>LiveKitClientAdapter</code> or implement your own.</p>
-        <pre><code>import { LiveKitClientAdapter } from 'sockr-client/adapters/livekit';
+        <pre><code>import { LiveKitClientAdapter } from 'sockr-client';
 // npm install livekit-client  (peer dependency)
 
 const adapter = new LiveKitClientAdapter();
 
 const {
-  conferenceState,   // ConferenceState enum
-  participants,      // string[] — userIds currently in the conference
+  conferenceState,   // ConferenceState — see values below
+  participants,      // ConferenceCallParticipant[] — { userId: string }[]
+  activeGroupId,     // string | null
+  error,             // string | null
   joinConference,    // (groupId: string) => void
-  leaveConference,   // (groupId: string) => void
+  leaveConference,   // () => void
   onRemoteTrack,     // (handler: (track, participantId) => void) => void
-} = useConferenceCall(adapter);
+} = useConferenceCall({ adapter, audio: true, video: false });
 
 // Join a group conference
 joinConference('group-id-123');
@@ -700,15 +705,17 @@ onRemoteTrack((track, participantId) => {
   el.srcObject = new MediaStream([track]);
 });</code></pre>
 
-        <h4>ConferenceState enum</h4>
+        <h4>ConferenceState</h4>
+        <p><code>type ConferenceState = 'idle' | 'joining' | 'active' | 'ended' | 'error'</code></p>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Value</th><th>Description</th></tr></thead>
             <tbody>
-              <tr><td><code>IDLE</code></td><td>Not in any conference.</td></tr>
-              <tr><td><code>JOINING</code></td><td>Join requested, waiting for SFU token.</td></tr>
-              <tr><td><code>CONNECTED</code></td><td>Connected to the SFU room, media can flow.</td></tr>
-              <tr><td><code>ERROR</code></td><td>Conference join/connection failed.</td></tr>
+              <tr><td><code>'idle'</code></td><td>Not in any conference.</td></tr>
+              <tr><td><code>'joining'</code></td><td>Join requested, waiting for SFU token from server.</td></tr>
+              <tr><td><code>'active'</code></td><td>Connected to the SFU room, media can flow.</td></tr>
+              <tr><td><code>'ended'</code></td><td>Conference ended (by the server or last participant leaving).</td></tr>
+              <tr><td><code>'error'</code></td><td>Conference join or SFU connection failed. Check <code>error</code>.</td></tr>
             </tbody>
           </table>
         </div>
@@ -741,9 +748,8 @@ onRemoteTrack((track, participantId) => {
 function App() {
   return (
     &lt;SocketProvider
-      url="https://your-server.com"
+      config={{ url: "https://your-server.com", transports: ['websocket'] }}
       token={authToken}
-      transports={['websocket']}  // required for React Native
     &gt;
       &lt;YourApp /&gt;
     &lt;/SocketProvider&gt;

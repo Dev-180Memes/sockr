@@ -908,6 +908,24 @@ type CallState = "idle" | "calling" | "ringing" | "active" | "busy" | "ended";
 - Auto-rejects an incoming call if already in a call.
 - Stops all media tracks and closes `RTCPeerConnection` on hang up, rejection, or unmount.
 
+#### React Native
+
+`useVoiceCall` relies on `navigator.mediaDevices.getUserMedia()` and `RTCPeerConnection` — both are browser WebRTC APIs that do not exist in the React Native JS environment by default.
+
+To use `useVoiceCall` in React Native, install [`react-native-webrtc`](https://github.com/react-native-webrtc/react-native-webrtc) and call `registerGlobals()` before rendering any component that uses this hook:
+
+```bash
+npm install react-native-webrtc
+```
+
+```typescript
+// index.js / App entry point — must run before any sockr hooks
+import { registerGlobals } from "react-native-webrtc";
+registerGlobals();
+```
+
+Without this, `RTCPeerConnection` and `getUserMedia` will be `undefined` and calls will fail immediately.
+
 ### useConferenceCall
 
 Manages an SFU-based group conference call. Requires a client-side SFU adapter (e.g. `LiveKitClientAdapter`) and a group created with `useGroupMessaging`.
@@ -1004,6 +1022,20 @@ const adapter = new LiveKitClientAdapter();
 ```
 
 The adapter is loaded lazily — projects not using LiveKit are unaffected. You can implement `ISFUClientAdapter` to use any other SFU.
+
+#### React Native (useConferenceCall)
+
+`LiveKitClientAdapter` uses `require('livekit-client')` — the web SDK — which does not work in React Native. To use conference calling in React Native you must:
+
+1. Install the React Native LiveKit SDK instead of the web one:
+
+```bash
+npm install @livekit/react-native @livekit/react-native-webrtc
+```
+
+2. Follow the [`@livekit/react-native` setup guide](https://github.com/livekit/client-sdk-react-native) to configure native dependencies.
+
+3. Write a custom adapter that wraps the React Native SDK and implements `ISFUClientAdapter`. `LiveKitClientAdapter` cannot be used as-is on React Native.
 
 #### `ISFUClientAdapter` Interface
 
