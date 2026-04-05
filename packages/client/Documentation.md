@@ -27,6 +27,10 @@ Complete reference for the `sockr-client` package.
   - [useSendMessage](#usesendmessage)
   - [usePresence](#usepresence)
   - [useTypingIndicator](#usetypingindicator)
+  - [useGroup](#usegroup)
+  - [useGroupMessages](#usegroupmessages)
+  - [useGroupTyping](#usegrouptyping)
+  - [useUserGroups](#useusergroups)
   - [useVoiceCall](#usevoicecall)
   - [useConferenceCall](#useconferencecall)
 - [Core Classes](#core-classes)
@@ -640,6 +644,184 @@ function TypingStatus() {
 - Listens to incoming `typing_start` and `typing_stop` events to track `usersTyping`.
 - Automatically removes users from `usersTyping` after the timeout if no `typing_stop` event is received.
 - Cleans up all timers on unmount.
+
+### useGroup
+
+Manages membership for a single group — join/leave, member list, and group object. Keeps the `members` array in sync by listening to `group_member_joined` and `group_member_left` events.
+
+```typescript
+import { useGroup } from "sockr-client";
+
+function GroupRoom({ groupId }: { groupId: string }) {
+  const {
+    group,          // Group | null — full group object
+    members,        // GroupMember[]
+    isJoined,       // boolean
+    join,           // () => void
+    leave,          // () => void
+    refreshMembers, // () => void
+  } = useGroup(groupId);
+
+  if (!isJoined) return <button onClick={join}>Join Group</button>;
+
+  return (
+    <div>
+      <h2>{group?.name}</h2>
+      <p>{members.length} members</p>
+      <button onClick={leave}>Leave</button>
+      <button onClick={refreshMembers}>Refresh Members</button>
+    </div>
+  );
+}
+```
+
+**Behavior:**
+
+- Emits `group_join` when `join()` is called. On `group_joined`, stores the full `Group` object and fetches members.
+- Emits `group_leave` when `leave()` is called.
+- Listens to `group_member_joined` and `group_member_left` to keep the member list up-to-date.
+- `refreshMembers()` emits `get_group_members` and updates the list on response.
+
+---
+
+### useGroupMessages
+
+Manages messages for a single group, including history fetching, sending, pagination, and deduplication.
+
+```typescript
+import { useGroupMessages } from "sockr-client";
+
+function GroupChat({ groupId }: { groupId: string }) {
+  const {
+    messages,         // GroupMessage[] — sorted by timestamp
+    isLoadingHistory, // boolean
+    sendMessage,      // (content: string, metadata?: Record<string, any>) => void
+    markRead,         // (messageId: string) => void
+    fetchHistory,     // (before?: number) => void — paginate older messages
+    clearMessages,    // () => void
+  } = useGroupMessages(groupId, {
+    fetchHistory: true, // auto-fetch on mount (default: true)
+    limit: 50,          // messages per page (default: 50)
+  });
+
+  return (
+    <div>
+      {isLoadingHistory && <p>Loading...</p>}
+      <button onClick={() => fetchHistory(messages[0]?.timestamp)}>
+        Load older
+      </button>
+      {messages.map((msg) => (
+        <div key={msg.id}>
+          <strong>{msg.from}:</strong> {msg.content}
+        </div>
+      ))}
+      <button onClick={() => sendMessage("Hello group!")}>Send</button>
+    </div>
+  );
+}
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fetchHistory` | `boolean` | `true` | Auto-fetch history on mount |
+| `limit` | `number` | `50` | Messages per page |
+
+**Behavior:**
+
+- Listens to `group_receive_message` and appends to the message array.
+- When the `group_joined` payload includes `queuedMessages`, they are merged in.
+- Deduplicates by message ID to prevent duplicates on reconnect replay.
+- `fetchHistory(before?)` passes `before` as a timestamp cursor for pagination.
+
+---
+
+### useGroupTyping
+
+Tracks typing indicators for a group. Excludes the local user. Debounces `startTyping()` — call it on every keypress and it auto-stops after `stopDelay` ms of inactivity.
+
+```typescript
+import { useGroupTyping } from "sockr-client";
+
+function GroupInput({ groupId }: { groupId: string }) {
+  const {
+    typingMembers, // string[] — userIds currently typing (excludes you)
+    startTyping,   // () => void
+    stopTyping,    // () => void
+  } = useGroupTyping(groupId, 2000); // 2s inactivity timeout
+
+  return (
+    <div>
+      {typingMembers.length > 0 && (
+        <p>
+          {typingMembers.join(", ")}{" "}
+          {typingMembers.length === 1 ? "is" : "are"} typing...
+        </p>
+      )}
+      <input
+        onKeyDown={startTyping}
+        onBlur={stopTyping}
+        placeholder="Type a message..."
+      />
+    </div>
+  );
+}
+```
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `groupId` | `string` | required | The group to track typing for |
+| `stopDelay` | `number` | `3000` | ms of inactivity before auto-stop |
+
+**Behavior:**
+
+- `startTyping()` emits `group_typing_start` and sets a debounce timer. Calling repeatedly on each keypress resets the timer.
+- After `stopDelay` ms of inactivity the timer fires `stopTyping()` automatically.
+- Stale remote indicators auto-clear after `stopDelay × 2` ms if no stop event arrives.
+- Local user is filtered out of `typingMembers`.
+
+---
+
+### useUserGroups
+
+Returns the authenticated user's group list. Auto-fetches on mount and stays in sync as groups are created, joined, or left.
+
+```typescript
+import { useUserGroups } from "sockr-client";
+
+function GroupSidebar() {
+  const {
+    groups,      // Group[]
+    isLoading,   // boolean
+    refresh,     // () => void — re-fetch from server
+    createGroup, // (name: string, members?: string[], metadata?) => void
+  } = useUserGroups();
+
+  return (
+    <div>
+      {isLoading && <p>Loading groups...</p>}
+      {groups.map((g) => (
+        <div key={g.id}>
+          {g.name} — {g.members.length} members
+        </div>
+      ))}
+      <button
+        onClick={() => createGroup("Team Sync", ["user-2", "user-3"])}
+      >
+        New Group
+      </button>
+    </div>
+  );
+}
+```
+
+**Behavior:**
+
+- Emits `get_user_groups` on mount and stores the response.
+- Listens to `group_created` and `group_joined` to append new groups.
+- Listens to `group_left` to remove the left group from the list.
+- `createGroup()` emits `group_create` and the new group appears via the `group_created` event.
+
+---
 
 ### useVoiceCall
 

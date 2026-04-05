@@ -47,7 +47,7 @@
 </div>
 
 <div class="page-hero">
-  <span class="pkg-badge shared" style="margin-bottom:0.75rem;">sockr-shared@1.1.2</span>
+  <span class="pkg-badge shared" style="margin-bottom:0.75rem;">sockr-shared@1.3.0</span>
   <h1>Shared Types</h1>
   <p>Zero-dependency TypeScript type definitions. The single source of truth for the Sockr protocol.</p>
 </div>
@@ -64,6 +64,9 @@
       <a href="#user-types" class="sidebar-link">User &amp; UserConnection</a>
       <a href="#message-types" class="sidebar-link">Message Types</a>
       <a href="#group-types" class="sidebar-link">Group Types</a>
+      <a href="#voice-types" class="sidebar-link">Voice Call Types</a>
+      <a href="#conference-types" class="sidebar-link">Conference Types</a>
+      <a href="#sfu-types" class="sidebar-link">SFU Provider Types</a>
       <a href="#config-types" class="sidebar-link">Config Types</a>
     </div>
     <div class="sidebar-group">
@@ -84,7 +87,7 @@
 
     <!-- SocketEvent -->
     <h2 id="socket-event">SocketEvent Enum</h2>
-    <p>All 38 event strings used across the Sockr protocol. Import and use these everywhere instead of raw strings.</p>
+    <p>All 63 event strings used across the Sockr protocol. Import and use these everywhere instead of raw strings.</p>
     <pre><code>import { SocketEvent } from 'sockr-shared';</code></pre>
 
     <h3>Connection</h3>
@@ -153,6 +156,35 @@
       <div class="enum-item"><span class="enum-key">GROUP_MESSAGE_HISTORY</span><span class="enum-val">'group_message_history'</span></div>
     </div>
 
+    <h3>Voice Calling (P2P)</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">CALL_GET_ICE_SERVERS</span><span class="enum-val">'call_get_ice_servers'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_ICE_SERVERS</span><span class="enum-val">'call_ice_servers'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_INITIATE</span><span class="enum-val">'call_initiate'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_INCOMING</span><span class="enum-val">'call_incoming'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_RINGING</span><span class="enum-val">'call_ringing'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_ANSWER</span><span class="enum-val">'call_answer'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_ANSWERED</span><span class="enum-val">'call_answered'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_REJECT</span><span class="enum-val">'call_reject'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_REJECTED</span><span class="enum-val">'call_rejected'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_HANGUP</span><span class="enum-val">'call_hangup'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_ENDED</span><span class="enum-val">'call_ended'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_BUSY</span><span class="enum-val">'call_busy'</span></div>
+      <div class="enum-item"><span class="enum-key">CALL_ICE_CANDIDATE</span><span class="enum-val">'call_ice_candidate'</span></div>
+    </div>
+
+    <h3>Group Conference Calling (SFU)</h3>
+    <div class="enum-grid">
+      <div class="enum-item"><span class="enum-key">CONFERENCE_JOIN</span><span class="enum-val">'conference_join'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_LEAVE</span><span class="enum-val">'conference_leave'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_TOKEN</span><span class="enum-val">'conference_token'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_STARTED</span><span class="enum-val">'conference_started'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_ENDED</span><span class="enum-val">'conference_ended'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_PARTICIPANT_JOINED</span><span class="enum-val">'conference_participant_joined'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_PARTICIPANT_LEFT</span><span class="enum-val">'conference_participant_left'</span></div>
+      <div class="enum-item"><span class="enum-key">CONFERENCE_ERROR</span><span class="enum-val">'conference_error'</span></div>
+    </div>
+
     <!-- EventPayloads -->
     <h2 id="event-payloads">EventPayloads Interface</h2>
     <p>Maps every <code>SocketEvent</code> to its typed payload. Used internally by <code>SocketClient</code> and <code>SocketServer</code> for type-safe emit/listen.</p>
@@ -212,6 +244,31 @@ const handler = (data: EventPayloads[SocketEvent.RECEIVE_MESSAGE]) => {
   group_typing_stop:          { groupId: string; from: string };
   get_group_message_history:  { groupId: string; limit?: number; before?: number };
   group_message_history:      { groupId: string; messages: PersistedMessage[] };
+
+  // Voice calling (P2P)
+  call_get_ice_servers:       Record&lt;string, never&gt;;
+  call_ice_servers:           { iceServers: IceServer[] };
+  call_initiate:              { to: string; sdpOffer: string };
+  call_incoming:              { callId: string; from: string; sdpOffer: string; iceServers: IceServer[] };
+  call_ringing:               { callId: string };
+  call_answer:                { callId: string; sdpAnswer: string };
+  call_answered:              { callId: string; sdpAnswer: string };
+  call_reject:                { callId: string };
+  call_rejected:              { callId: string };
+  call_hangup:                { callId: string };
+  call_ended:                 { callId: string };
+  call_busy:                  { callId: string };
+  call_ice_candidate:         { callId: string; candidate: IceCandidateInit };
+
+  // Group conference calling (SFU)
+  conference_join:            { groupId: string };
+  conference_leave:           { groupId: string };
+  conference_token:           { groupId: string; sfuUrl: string; token: string };
+  conference_started:         { groupId: string; startedBy: string; participantCount: number };
+  conference_ended:           { groupId: string };
+  conference_participant_joined: { groupId: string; userId: string; participantCount: number };
+  conference_participant_left:   { groupId: string; userId: string; participantCount: number };
+  conference_error:           { groupId: string; error: string };
 }</code></pre>
 
     <!-- User Types -->
@@ -313,6 +370,105 @@ interface GroupMember {
   readBy: string[];      // userIds who have read the message
 }</code></pre>
 
+    <!-- Voice Call Types -->
+    <h2 id="voice-types">Voice Call Types</h2>
+
+    <h3>CallStatus</h3>
+    <pre><code>type CallStatus = 'initiating' | 'ringing' | 'active' | 'ended' | 'rejected' | 'busy';</code></pre>
+
+    <h3>IceServer</h3>
+    <p>Mirrors <code>RTCIceServer</code> — safe to cast directly on the client. Used in <code>call_incoming</code> and <code>call_ice_servers</code> payloads.</p>
+    <pre><code>interface IceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}</code></pre>
+
+    <h3>IceCandidateInit</h3>
+    <p>Serialisable form of <code>RTCIceCandidateInit</code> — safe to transmit over a socket.</p>
+    <pre><code>interface IceCandidateInit {
+  candidate?: string;
+  sdpMid?: string | null;
+  sdpMLineIndex?: number | null;
+  usernameFragment?: string | null;
+}</code></pre>
+
+    <h3>ActiveCall</h3>
+    <p>Server-side representation of an in-flight call, keyed by <code>callId</code>.</p>
+    <pre><code>interface ActiveCall {
+  callId: string;
+  callerId: string;
+  calleeId: string;
+  status: CallStatus;
+  startedAt: number; // Unix timestamp (ms)
+}</code></pre>
+
+    <!-- Conference Types -->
+    <h2 id="conference-types">Conference Types</h2>
+
+    <h3>ConferenceParticipant</h3>
+    <pre><code>interface ConferenceParticipant {
+  userId: string;
+  joinedAt: number; // Unix timestamp (ms)
+}</code></pre>
+
+    <h3>ConferenceRoom</h3>
+    <p>Server-side representation of an active conference room, keyed by <code>groupId</code>.</p>
+    <pre><code>interface ConferenceRoom {
+  groupId: string;
+  participants: ConferenceParticipant[];
+  startedAt: number;
+  startedBy: string;
+}</code></pre>
+
+    <!-- SFU Provider Types -->
+    <h2 id="sfu-types">SFU Provider Types</h2>
+
+    <h3>ISFUProvider (server-side)</h3>
+    <p>Implement this interface to connect Sockr's <code>ConferencePlugin</code> to any SFU. Sockr ships <code>LiveKitSFUProvider</code> as the reference implementation.</p>
+    <pre><code>interface ISFUProvider {
+  connect?(): Promise&lt;void&gt;;
+  disconnect?(): Promise&lt;void&gt;;
+  generateToken(roomName: string, participantIdentity: string, opts?: TokenOptions): Promise&lt;string&gt;;
+  createRoom?(roomName: string, opts?: RoomOptions): Promise&lt;void&gt;;
+  deleteRoom?(roomName: string): Promise&lt;void&gt;;
+}</code></pre>
+
+    <h3>TokenOptions</h3>
+    <pre><code>interface TokenOptions {
+  ttl?: number;        // Credential lifetime in seconds. Defaults to 3600.
+  canPublish?: boolean; // Whether participant can publish audio/video. Defaults to true.
+  canSubscribe?: boolean; // Whether participant can subscribe. Defaults to true.
+}</code></pre>
+
+    <h3>RoomOptions</h3>
+    <pre><code>interface RoomOptions {
+  emptyTimeout?: number; // Seconds before an empty room is auto-deleted. Defaults to 300.
+}</code></pre>
+
+    <h3>ISFUClientAdapter (client-side)</h3>
+    <p>Client-side SFU abstraction used by <code>useConferenceCall()</code>. Sockr ships <code>LiveKitClientAdapter</code> as the reference implementation.</p>
+    <pre><code>interface ISFUClientAdapter {
+  connect(sfuUrl: string, token: string, opts?: SFUConnectOptions): Promise&lt;void&gt;;
+  disconnect(): Promise&lt;void&gt;;
+  publishTracks(opts?: SFUPublishOptions): Promise&lt;void&gt;;
+  onTrackSubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onTrackUnsubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onParticipantConnected(handler: (participantId: string) => void): void;
+  onParticipantDisconnected(handler: (participantId: string) => void): void;
+  onDisconnected(handler: () => void): void;
+}
+
+interface SFUConnectOptions {
+  audio?: boolean; // Publish audio immediately. Default: true.
+  video?: boolean; // Publish video immediately. Default: false.
+}
+
+interface SFUPublishOptions {
+  audio?: boolean;
+  video?: boolean;
+}</code></pre>
+
     <!-- Config Types -->
     <h2 id="config-types">Config Types</h2>
 
@@ -331,6 +487,22 @@ interface GroupMember {
     queue?: IQueueProvider;
     cache?: ICacheProvider;
   };
+  /** Voice calling configuration. Required to enable the VoicePlugin. */
+  voice?: VoiceConfig;
+}</code></pre>
+
+    <h3>VoiceConfig</h3>
+    <pre><code>interface VoiceConfig {
+  /** Static ICE servers (e.g. a public STUN). Always included as-is. */
+  iceServers?: IceServer[];
+  /** Coturn TURN config. When provided, Sockr generates short-lived HMAC-SHA1 credentials per user. The secret never reaches the client. */
+  turn?: TurnConfig;
+}
+
+interface TurnConfig {
+  urls: string | string[];   // TURN server URL(s), e.g. "turn:turn.example.com:3478"
+  secret: string;            // static-auth-secret from turnserver.conf
+  ttl?: number;              // Credential lifetime in seconds. Defaults to 3600.
 }</code></pre>
 
     <h3>ClientConfig</h3>

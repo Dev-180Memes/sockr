@@ -74,10 +74,10 @@
   <div class="hero-content">
     <div class="hero-badge">
       <span class="pulse-dot"></span>
-      Real-time · Open Source · v1.1.x
+      Real-time · Open Source · v1.2.x
     </div>
     <h1>The Communication Layer<br><span class="accent">Your App Deserves</span></h1>
-    <p class="lead">Type-safe, real-time WebSocket messaging with authentication, presence, group chat, and 10 React hooks — built on Socket.IO.</p>
+    <p class="lead">Type-safe, real-time WebSocket messaging with authentication, presence, group chat, voice and conference calling, and 12 React hooks — built on Socket.IO.</p>
     <div class="hero-ctas">
       <a href="getting-started.html" class="btn btn-primary">Get Started →</a>
       <a href="https://github.com/Dev-180Memes/sockr" target="_blank" rel="noopener" class="btn btn-outline">
@@ -88,9 +88,9 @@
     <div class="hero-stats">
       <div class="stat"><span class="stat-num">3</span><span class="stat-label">Packages</span></div>
       <div class="stat-divider"></div>
-      <div class="stat"><span class="stat-num">10</span><span class="stat-label">React Hooks</span></div>
+      <div class="stat"><span class="stat-num">12</span><span class="stat-label">React Hooks</span></div>
       <div class="stat-divider"></div>
-      <div class="stat"><span class="stat-num">38</span><span class="stat-label">Socket Events</span></div>
+      <div class="stat"><span class="stat-num">63</span><span class="stat-label">Socket Events</span></div>
       <div class="stat-divider"></div>
       <div class="stat"><span class="stat-num">0</span><span class="stat-label">Config Required</span></div>
     </div>
@@ -122,8 +122,18 @@
     </div>
     <div class="feature-card fade-in">
       <div class="feature-icon signal">⚛︎</div>
-      <h3>10 React Hooks</h3>
-      <p>Purpose-built hooks: <code>useSocket</code>, <code>useMessages</code>, <code>useSendMessage</code>, <code>usePresence</code>, <code>useTypingIndicator</code>, <code>useGroup</code>, <code>useGroupMessages</code>, <code>useGroupTyping</code>, <code>useUserGroups</code>, <code>useSocketEvent</code>.</p>
+      <h3>12 React Hooks</h3>
+      <p>Purpose-built hooks: <code>useSocket</code>, <code>useMessages</code>, <code>useSendMessage</code>, <code>usePresence</code>, <code>useTypingIndicator</code>, <code>useGroup</code>, <code>useGroupMessages</code>, <code>useGroupTyping</code>, <code>useUserGroups</code>, <code>useSocketEvent</code>, <code>useVoiceCall</code>, <code>useConferenceCall</code>.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon pulse">📞</div>
+      <h3>P2P Voice &amp; Video Calling</h3>
+      <p>WebRTC peer-to-peer calls with ICE/STUN/TURN signaling. Sockr handles SDP offer/answer relay and trickle ICE — the <code>useVoiceCall</code> hook manages the full call lifecycle and media streams.</p>
+    </div>
+    <div class="feature-card fade-in">
+      <div class="feature-icon deep">🎙️</div>
+      <h3>SFU Group Conferences</h3>
+      <p>Multi-party group calling via a Selective Forwarding Unit (LiveKit or custom). The server manages room creation and token generation — clients connect directly to the SFU using <code>useConferenceCall</code>.</p>
     </div>
     <div class="feature-card fade-in">
       <div class="feature-icon amber">📱</div>
@@ -276,17 +286,17 @@ function Chat() {
   <h2 class="section-title">Explore the docs</h2>
   <div class="features-grid" style="margin-top:2rem;">
     <a href="server.html" class="feature-card fade-in" style="cursor:pointer;">
-      <span class="pkg-badge server">sockr-server@1.1.1</span>
+      <span class="pkg-badge server">sockr-server@1.2.0</span>
       <h3 style="margin-top:0.75rem;">Server SDK →</h3>
-      <p>Plugin-based WebSocket server. Supports standalone, HTTP attach, and Express modes. Auth, Presence, Messaging, Group plugins with full adapter support.</p>
+      <p>Plugin-based WebSocket server. Supports standalone, HTTP attach, and Express modes. Auth, Presence, Messaging, Group, Voice, and Conference plugins with full adapter support.</p>
     </a>
     <a href="client.html" class="feature-card fade-in" style="cursor:pointer;">
-      <span class="pkg-badge client">sockr-client@1.0.2</span>
+      <span class="pkg-badge client">sockr-client@1.2.0</span>
       <h3 style="margin-top:0.75rem;">Client SDK →</h3>
-      <p>Framework-agnostic <code>SocketClient</code> core plus 10 React hooks. Works with React, React Native (WebSocket transport), and plain JavaScript.</p>
+      <p>Framework-agnostic <code>SocketClient</code> core plus 12 React hooks including <code>useVoiceCall</code> and <code>useConferenceCall</code>. Works with React, React Native, and plain JavaScript.</p>
     </a>
     <a href="shared.html" class="feature-card fade-in" style="cursor:pointer;">
-      <span class="pkg-badge shared">sockr-shared@1.1.2</span>
+      <span class="pkg-badge shared">sockr-shared@1.3.0</span>
       <h3 style="margin-top:0.75rem;">Shared Types →</h3>
       <p>Zero-dependency type definitions. The <code>SocketEvent</code> enum, <code>EventPayloads</code>, and all core interfaces — the single source of truth for the protocol.</p>
     </a>

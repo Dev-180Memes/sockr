@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Client SDK — Sockr</title>
-  <meta name="description" content="Full API reference for sockr-client: SocketClient, 10 React hooks, events, and React Native support.">
+  <meta name="description" content="Full API reference for sockr-client: SocketClient, 12 React hooks, events, and React Native support.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,9 +47,9 @@
 </div>
 
 <div class="page-hero">
-  <span class="pkg-badge client" style="margin-bottom:0.75rem;">sockr-client@1.0.2</span>
+  <span class="pkg-badge client" style="margin-bottom:0.75rem;">sockr-client@1.2.0</span>
   <h1>Client SDK</h1>
-  <p>Framework-agnostic <code>SocketClient</code> core and 10 purpose-built React hooks. Full API reference.</p>
+  <p>Framework-agnostic <code>SocketClient</code> core and 12 purpose-built React hooks. Full API reference.</p>
 </div>
 
 <div class="page-layout">
@@ -75,6 +75,8 @@
       <a href="#use-group-messages" class="sidebar-link">useGroupMessages</a>
       <a href="#use-group-typing" class="sidebar-link">useGroupTyping</a>
       <a href="#use-user-groups" class="sidebar-link">useUserGroups</a>
+      <a href="#use-voice-call" class="sidebar-link">useVoiceCall</a>
+      <a href="#use-conference-call" class="sidebar-link">useConferenceCall</a>
     </div>
     <div class="sidebar-group">
       <div class="sidebar-group-label">Platforms</div>
@@ -84,7 +86,7 @@
 
   <main class="doc-content">
     <h1>Client SDK Reference</h1>
-    <p class="page-subtitle">Complete reference for <code>sockr-client</code>. Covers the framework-agnostic <code>SocketClient</code> core, all 10 React hooks, and platform-specific notes.</p>
+    <p class="page-subtitle">Complete reference for <code>sockr-client</code>. Covers the framework-agnostic <code>SocketClient</code> core, all 12 React hooks, and platform-specific notes.</p>
 
     <!-- SocketClient -->
     <h2 id="socket-client">SocketClient</h2>
@@ -204,6 +206,32 @@ const client = new SocketClient(config: ClientConfig);</code></pre>
       </table>
     </div>
 
+    <h3>Voice Calling (P2P)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>getIceServers()</code></td><td>Request ICE/TURN servers from the server. Listen for <code>call_ice_servers</code>.</td></tr>
+          <tr><td><code>initiateCall(to, sdpOffer)</code></td><td>Start a P2P call. Listen for <code>call_ringing</code> then <code>call_answered</code>.</td></tr>
+          <tr><td><code>answerCall(callId, sdpAnswer)</code></td><td>Accept an incoming call. Caller receives <code>call_answered</code>.</td></tr>
+          <tr><td><code>rejectCall(callId)</code></td><td>Decline an incoming call. Caller receives <code>call_rejected</code>.</td></tr>
+          <tr><td><code>hangUp(callId)</code></td><td>End an active or ringing call. Both parties receive <code>call_ended</code>.</td></tr>
+          <tr><td><code>sendIceCandidate(callId, candidate)</code></td><td>Trickle an ICE candidate to the remote peer during call setup.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Conference Calling (SFU)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>joinConference(groupId)</code></td><td>Join (or create) a group conference. Listen for <code>conference_token</code> to connect to the SFU.</td></tr>
+          <tr><td><code>leaveConference(groupId)</code></td><td>Leave a group conference. If last participant, the SFU room is torn down.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <h3>Event Subscriptions</h3>
     <div class="table-wrap">
       <table>
@@ -296,6 +324,38 @@ const client = new SocketClient(config: ClientConfig);</code></pre>
           <tr><td><code>group_typing_start</code></td><td><code>{ groupId, from }</code></td><td>A group member started typing.</td></tr>
           <tr><td><code>group_typing_stop</code></td><td><code>{ groupId, from }</code></td><td>A group member stopped typing.</td></tr>
           <tr><td><code>group_message_history</code></td><td><code>{ groupId, messages: PersistedMessage[] }</code></td><td>Paginated group history response.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Voice Calls (P2P)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>call_ice_servers</code></td><td><code>{ iceServers: IceServer[] }</code></td><td>ICE/TURN server list response (includes STUN + generated TURN credentials).</td></tr>
+          <tr><td><code>call_incoming</code></td><td><code>{ callId, from, sdpOffer, iceServers }</code></td><td>Incoming call from another user.</td></tr>
+          <tr><td><code>call_ringing</code></td><td><code>{ callId }</code></td><td>Callee received your call initiation.</td></tr>
+          <tr><td><code>call_answered</code></td><td><code>{ callId, sdpAnswer }</code></td><td>Remote peer accepted the call with their SDP answer.</td></tr>
+          <tr><td><code>call_rejected</code></td><td><code>{ callId }</code></td><td>Remote peer declined the call.</td></tr>
+          <tr><td><code>call_ended</code></td><td><code>{ callId }</code></td><td>Call was ended by either party (or remote disconnect).</td></tr>
+          <tr><td><code>call_busy</code></td><td><code>{ callId }</code></td><td>Called user is already in another call.</td></tr>
+          <tr><td><code>call_ice_candidate</code></td><td><code>{ callId, candidate: IceCandidateInit }</code></td><td>Trickled ICE candidate from the remote peer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Conference Calls (SFU)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>conference_token</code></td><td><code>{ groupId, sfuUrl, token }</code></td><td>SFU access token — connect to <code>sfuUrl</code> using <code>token</code>.</td></tr>
+          <tr><td><code>conference_started</code></td><td><code>{ groupId, startedBy, participantCount }</code></td><td>First participant joined a group conference.</td></tr>
+          <tr><td><code>conference_ended</code></td><td><code>{ groupId }</code></td><td>Last participant left — conference is over.</td></tr>
+          <tr><td><code>conference_participant_joined</code></td><td><code>{ groupId, userId, participantCount }</code></td><td>A group member joined the active conference.</td></tr>
+          <tr><td><code>conference_participant_left</code></td><td><code>{ groupId, userId, participantCount }</code></td><td>A participant left the conference.</td></tr>
+          <tr><td><code>conference_error</code></td><td><code>{ groupId, error }</code></td><td>Conference join/leave error (e.g. not a group member).</td></tr>
         </tbody>
       </table>
     </div>
@@ -552,6 +612,124 @@ groups.map(g =&gt; (
     {g.name} — {g.members.length} members
   &lt;/div&gt;
 ))</code></pre>
+      </div>
+    </div>
+
+    <!-- useVoiceCall -->
+    <h2 id="use-voice-call">useVoiceCall(options?)</h2>
+    <div class="hook-card">
+      <div class="hook-card-header">
+        <span class="hook-num">11</span>
+        <span class="hook-name">useVoiceCall(options?)</span>
+      </div>
+      <div class="hook-card-body">
+        <p>Full WebRTC P2P call lifecycle. Manages <code>RTCPeerConnection</code>, ICE candidate buffering, and local/remote media streams. Supports audio-only or audio+video calls.</p>
+        <pre><code>const {
+  callState,     // CallState enum
+  localStream,   // MediaStream | null
+  remoteStream,  // MediaStream | null
+  startCall,     // (toUserId: string) => Promise&lt;void&gt;
+  answerCall,    // (callId: string, sdpOffer: string, iceServers: IceServer[]) => Promise&lt;void&gt;
+  rejectCall,    // (callId: string) => void
+  hangUp,        // () => void
+} = useVoiceCall({ video: false }); // video: false is the default
+
+// Initiate a call
+await startCall('user-456');
+
+// Incoming call (listen to call_incoming, then answerCall or rejectCall)
+useSocketEvent('call_incoming', async ({ callId, from, sdpOffer, iceServers }) => {
+  await answerCall(callId, sdpOffer, iceServers);
+  // or rejectCall(callId);
+});</code></pre>
+
+        <h4>Options</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>video</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Request camera access and include video track in the offer.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>CallState enum</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Value</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>IDLE</code></td><td>No active or pending call.</td></tr>
+              <tr><td><code>CALLING</code></td><td>Outgoing call initiated, waiting for answer.</td></tr>
+              <tr><td><code>RINGING</code></td><td>Incoming call received — user can answer or reject.</td></tr>
+              <tr><td><code>CONNECTED</code></td><td>Call is active, media is flowing.</td></tr>
+              <tr><td><code>ENDED</code></td><td>Call ended (briefly, before resetting to IDLE).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- useConferenceCall -->
+    <h2 id="use-conference-call">useConferenceCall(sfuAdapter)</h2>
+    <div class="hook-card">
+      <div class="hook-card-header">
+        <span class="hook-num">12</span>
+        <span class="hook-name">useConferenceCall(sfuAdapter)</span>
+      </div>
+      <div class="hook-card-body">
+        <p>SFU-based group conference calling. Handles join/leave, SFU connection lifecycle, and participant tracking. Pass an <code>ISFUClientAdapter</code> instance — use the included <code>LiveKitClientAdapter</code> or implement your own.</p>
+        <pre><code>import { LiveKitClientAdapter } from 'sockr-client/adapters/livekit';
+// npm install livekit-client  (peer dependency)
+
+const adapter = new LiveKitClientAdapter();
+
+const {
+  conferenceState,   // ConferenceState enum
+  participants,      // string[] — userIds currently in the conference
+  joinConference,    // (groupId: string) => void
+  leaveConference,   // (groupId: string) => void
+  onRemoteTrack,     // (handler: (track, participantId) => void) => void
+} = useConferenceCall(adapter);
+
+// Join a group conference
+joinConference('group-id-123');
+
+// Handle incoming remote media tracks
+onRemoteTrack((track, participantId) => {
+  const el = document.getElementById(`video-${participantId}`) as HTMLVideoElement;
+  el.srcObject = new MediaStream([track]);
+});</code></pre>
+
+        <h4>ConferenceState enum</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Value</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>IDLE</code></td><td>Not in any conference.</td></tr>
+              <tr><td><code>JOINING</code></td><td>Join requested, waiting for SFU token.</td></tr>
+              <tr><td><code>CONNECTED</code></td><td>Connected to the SFU room, media can flow.</td></tr>
+              <tr><td><code>ERROR</code></td><td>Conference join/connection failed.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>LiveKitClientAdapter</h4>
+        <p>Install the LiveKit client SDK as a peer dependency:</p>
+        <pre><code>npm install livekit-client</code></pre>
+        <p>The adapter lazily requires <code>livekit-client</code> at runtime, so it won't affect bundle size if conference calling is unused.</p>
+
+        <h4>ISFUClientAdapter interface</h4>
+        <p>Implement this to use a different SFU (mediasoup, Janus, etc.):</p>
+        <pre><code>interface ISFUClientAdapter {
+  connect(sfuUrl: string, token: string, opts?: SFUConnectOptions): Promise&lt;void&gt;;
+  disconnect(): Promise&lt;void&gt;;
+  publishTracks(opts?: SFUPublishOptions): Promise&lt;void&gt;;
+  onTrackSubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onTrackUnsubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onParticipantConnected(handler: (participantId: string) => void): void;
+  onParticipantDisconnected(handler: (participantId: string) => void): void;
+  onDisconnected(handler: () => void): void;
+}</code></pre>
       </div>
     </div>
 

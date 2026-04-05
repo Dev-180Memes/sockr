@@ -47,7 +47,7 @@
 </div>
 
 <div class="page-hero">
-  <span class="pkg-badge server" style="margin-bottom:0.75rem;">sockr-server@1.1.1</span>
+  <span class="pkg-badge server" style="margin-bottom:0.75rem;">sockr-server@1.2.0</span>
   <h1>Server SDK</h1>
   <p>Plugin-based WebSocket server built on Socket.IO and Express. Full API reference.</p>
 </div>
@@ -69,6 +69,8 @@
       <a href="#presence-plugin" class="sidebar-link">PresencePlugin</a>
       <a href="#message-plugin" class="sidebar-link">MessagePlugin</a>
       <a href="#group-plugin" class="sidebar-link">GroupPlugin</a>
+      <a href="#voice-plugin" class="sidebar-link">VoicePlugin</a>
+      <a href="#conference-plugin" class="sidebar-link">ConferencePlugin</a>
     </div>
     <div class="sidebar-group">
       <div class="sidebar-group-label">Adapters</div>
@@ -111,6 +113,7 @@ const server = new SocketServer(config?: ServerConfig);</code></pre>
           <tr><td><code>providers.messageStore</code></td><td><code>IMessageStore</code></td><td>InMemoryMessageStore</td><td>Message persistence adapter.</td></tr>
           <tr><td><code>providers.queue</code></td><td><code>IQueueProvider</code></td><td>InMemoryQueueProvider</td><td>Offline message queue adapter.</td></tr>
           <tr><td><code>providers.cache</code></td><td><code>ICacheProvider</code></td><td>InMemoryCacheProvider</td><td>Cache adapter.</td></tr>
+          <tr><td><code>voice</code></td><td><code>VoiceConfig</code></td><td><em>none</em></td><td>Voice calling config: static ICE servers and/or Coturn TURN credentials. Required by <code>.useVoice()</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -154,6 +157,30 @@ await server.listen(3000);</code></pre>
 
     <h3><code>useGroupMessaging(): this</code></h3>
     <p>Enables full group chat: create, join, leave, group messaging, group typing indicators, and group message history. Requires <code>useAuth()</code>.</p>
+
+    <h3><code>useVoice(config?: VoiceConfig): this</code></h3>
+    <p>Enables WebRTC P2P voice (and video) calling via ICE/STUN/TURN signaling. Requires <code>useAuth()</code>. Pass an optional <code>VoiceConfig</code> to supply ICE servers and TURN credentials, or read them from the top-level <code>voice</code> field of <code>ServerConfig</code>.</p>
+    <pre><code>server.useVoice({
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  turn: {
+    urls: 'turn:turn.example.com:3478',
+    secret: process.env.TURN_SECRET!,
+    ttl: 3600,
+  },
+});</code></pre>
+
+    <h3><code>useConference(sfuProvider: ISFUProvider, sfuUrl: string): this</code></h3>
+    <p>Enables SFU-based group conference calling. The <code>sfuProvider</code> creates rooms and generates access tokens on the server; the <code>sfuUrl</code> is delivered to clients so they can connect directly to the SFU. Requires <code>useAuth()</code> and <code>useGroupMessaging()</code>.</p>
+    <pre><code>import { LiveKitSFUProvider } from 'sockr-server';
+
+server.useConference(
+  new LiveKitSFUProvider({
+    apiKey: process.env.LIVEKIT_API_KEY!,
+    apiSecret: process.env.LIVEKIT_API_SECRET!,
+    host: 'https://your-livekit.example.com',
+  }),
+  'wss://your-livekit.example.com'
+);</code></pre>
 
     <h3><code>use(plugin: Plugin): this</code></h3>
     <p>Register a custom plugin. See <a href="#custom-plugins">Custom Plugins</a>.</p>
@@ -322,6 +349,122 @@ await server.listen(3000);</code></pre>
     <div class="callout callout-info">
       <strong>Multi-device group restore:</strong> On authentication, <code>restoreGroupMemberships(userId, socketId)</code> is called automatically. The user is silently re-joined to all their Socket.IO group rooms without re-emitting <code>group_joined</code> events.
     </div>
+
+    <!-- Voice Plugin -->
+    <h2 id="voice-plugin">VoicePlugin (P2P Voice &amp; Video)</h2>
+    <p>Registered via <code>.useVoice()</code>. Acts as the signaling layer for WebRTC peer-to-peer calls. It relays SDP offers/answers and ICE candidates between peers — it does not process media itself.</p>
+
+    <h3>VoiceConfig</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Property</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>iceServers</code></td><td><code>IceServer[]</code></td><td>Static ICE servers (STUN). Always included as-is in responses.</td></tr>
+          <tr><td><code>turn.urls</code></td><td><code>string | string[]</code></td><td>TURN server URL(s), e.g. <code>"turn:turn.example.com:3478"</code>.</td></tr>
+          <tr><td><code>turn.secret</code></td><td><code>string</code></td><td>The static-auth-secret from your Coturn config. Never sent to clients.</td></tr>
+          <tr><td><code>turn.ttl</code></td><td><code>number</code></td><td>Credential lifetime in seconds. Defaults to <code>3600</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-info">
+      <strong>TURN credential security:</strong> When <code>turn</code> config is provided, Sockr generates short-lived HMAC-SHA1 credentials per user per call. The TURN shared secret never reaches the client — only the derived time-limited credentials are sent.
+    </div>
+
+    <h3>Events received from clients</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>call_get_ice_servers</code></td><td><code>{}</code></td><td>Request ICE/TURN server list. Server responds with <code>call_ice_servers</code>.</td></tr>
+          <tr><td><code>call_initiate</code></td><td><code>{ to: string; sdpOffer: string }</code></td><td>Begin a call with another user. Server forwards to callee as <code>call_incoming</code>.</td></tr>
+          <tr><td><code>call_answer</code></td><td><code>{ callId: string; sdpAnswer: string }</code></td><td>Accept an incoming call with an SDP answer.</td></tr>
+          <tr><td><code>call_reject</code></td><td><code>{ callId: string }</code></td><td>Decline an incoming call.</td></tr>
+          <tr><td><code>call_hangup</code></td><td><code>{ callId: string }</code></td><td>End an active or ringing call.</td></tr>
+          <tr><td><code>call_ice_candidate</code></td><td><code>{ callId: string; candidate: IceCandidateInit }</code></td><td>Trickle an ICE candidate to the remote peer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Events emitted to clients</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Recipient</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr><td><code>call_ice_servers</code></td><td>Requester</td><td><code>{ iceServers: IceServer[] }</code> — includes STUN and generated TURN credentials</td></tr>
+          <tr><td><code>call_incoming</code></td><td>Callee</td><td><code>{ callId, from, sdpOffer, iceServers: IceServer[] }</code></td></tr>
+          <tr><td><code>call_ringing</code></td><td>Caller</td><td><code>{ callId }</code> — callee socket received the call</td></tr>
+          <tr><td><code>call_answered</code></td><td>Caller</td><td><code>{ callId, sdpAnswer }</code></td></tr>
+          <tr><td><code>call_rejected</code></td><td>Caller</td><td><code>{ callId }</code></td></tr>
+          <tr><td><code>call_ended</code></td><td>Both parties</td><td><code>{ callId }</code></td></tr>
+          <tr><td><code>call_busy</code></td><td>Caller</td><td><code>{ callId }</code> — callee is already in a call</td></tr>
+          <tr><td><code>call_ice_candidate</code></td><td>Remote peer</td><td><code>{ callId, candidate: IceCandidateInit }</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Automatic cleanup</h3>
+    <p>When a user disconnects while in an active or ringing call, <code>cleanupCallsForUser()</code> is called automatically. The remote peer receives a <code>call_ended</code> event.</p>
+
+    <h3>Video support</h3>
+    <p>The VoicePlugin is video-capable — it relays SDP without inspecting media types. On the client, pass <code>{ video: true }</code> to <code>useVoiceCall()</code> to include a video track in the offer.</p>
+
+    <!-- Conference Plugin -->
+    <h2 id="conference-plugin">ConferencePlugin (SFU Group Calls)</h2>
+    <p>Registered via <code>.useConference(sfuProvider, sfuUrl)</code>. Enables multi-party group conference calling via a Selective Forwarding Unit (SFU). The server handles room creation and token generation; clients connect directly to the SFU using the delivered token.</p>
+
+    <h3>ISFUProvider interface</h3>
+    <p>Implement this interface to connect any SFU. Sockr ships <code>LiveKitSFUProvider</code> as the reference implementation.</p>
+    <pre><code>interface ISFUProvider {
+  connect?(): Promise&lt;void&gt;;
+  disconnect?(): Promise&lt;void&gt;;
+  generateToken(roomName: string, participantIdentity: string, opts?: TokenOptions): Promise&lt;string&gt;;
+  createRoom?(roomName: string, opts?: RoomOptions): Promise&lt;void&gt;;
+  deleteRoom?(roomName: string): Promise&lt;void&gt;;
+}</code></pre>
+
+    <h3>LiveKitSFUProvider</h3>
+    <p>The built-in LiveKit provider. Uses lazy <code>require('livekit-server-sdk')</code> — install it separately:</p>
+    <pre><code>npm install livekit-server-sdk</code></pre>
+    <pre><code>import { LiveKitSFUProvider } from 'sockr-server';
+
+const provider = new LiveKitSFUProvider({
+  apiKey: process.env.LIVEKIT_API_KEY!,
+  apiSecret: process.env.LIVEKIT_API_SECRET!,
+  host: 'https://your-livekit.example.com',
+});</code></pre>
+
+    <h3>Events received from clients</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Payload</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>conference_join</code></td><td><code>{ groupId: string }</code></td><td>Join or create a conference for the group. User must be a member of the group.</td></tr>
+          <tr><td><code>conference_leave</code></td><td><code>{ groupId: string }</code></td><td>Leave the conference. If last participant, the SFU room is deleted.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Events emitted to clients</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Recipient</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr><td><code>conference_token</code></td><td>Joining user</td><td><code>{ groupId, sfuUrl, token }</code> — connect to the SFU using this token</td></tr>
+          <tr><td><code>conference_started</code></td><td>All group members</td><td><code>{ groupId, startedBy, participantCount: 1 }</code> — first participant joined</td></tr>
+          <tr><td><code>conference_ended</code></td><td>All group members</td><td><code>{ groupId }</code> — last participant left</td></tr>
+          <tr><td><code>conference_participant_joined</code></td><td>All group members</td><td><code>{ groupId, userId, participantCount }</code></td></tr>
+          <tr><td><code>conference_participant_left</code></td><td>All group members</td><td><code>{ groupId, userId, participantCount }</code></td></tr>
+          <tr><td><code>conference_error</code></td><td>Requesting user</td><td><code>{ groupId, error: string }</code> — e.g. not a group member</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>Membership check:</strong> <code>CONFERENCE_JOIN</code> validates that the requesting user is a member of the group (via <code>IMessageStore.getGroup()</code>). Non-members receive a <code>conference_error</code>.
+    </div>
+
+    <h3>Automatic conference cleanup</h3>
+    <p>When a user disconnects while in a conference, <code>cleanupParticipant()</code> is called automatically. If they were the last participant, the SFU room is deleted and all group members receive <code>conference_ended</code>. Multi-device connections are handled — only the last socket triggers cleanup.</p>
 
     <!-- DB Adapters -->
     <h2 id="db-adapters">Database Adapters</h2>
