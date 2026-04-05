@@ -19,6 +19,7 @@ Complete reference for the `sockr-server` package.
 - [Typing Indicators](#typing-indicators)
 - [Group Messaging](#group-messaging)
 - [Voice Calling](#voice-calling)
+- [Group Conference Calling](#group-conference-calling)
 - [Connection Management](#connection-management)
 - [Custom Plugins](#custom-plugins)
 - [Socket Events Reference](#socket-events-reference)
@@ -756,6 +757,117 @@ When a user's **last** socket disconnects, all active or ringing calls they are 
 
 ---
 
+## Group Conference Calling
+
+Enable SFU-based group audio/video calls for group members. Unlike P2P voice calling, media is routed through a Selective Forwarding Unit (SFU) so any number of participants can join. The server handles room creation, short-lived token issuance, and participant lifecycle — the SFU handles media.
+
+```typescript
+import { LiveKitSFUProvider } from "sockr-server";
+
+const server = new SocketServer()
+  .createStandalone()
+  .useAuth(authHandler)
+  .useGroupMessaging() // Conference requires group membership data
+  .useConference(
+    new LiveKitSFUProvider({
+      apiKey: process.env.LIVEKIT_API_KEY!,
+      apiSecret: process.env.LIVEKIT_API_SECRET!,
+      host: "https://your-livekit.example.com",
+    }),
+    "wss://your-livekit.example.com"
+  );
+
+await server.listen(3000);
+```
+
+> **Note:** The `LiveKitSFUProvider` requires `livekit-server-sdk` installed in your project: `npm install livekit-server-sdk`. You can supply any SFU by implementing the `ISFUProvider` interface instead.
+
+### `useConference(sfuProvider, sfuUrl)`
+
+| Parameter     | Type            | Description                                                              |
+| ------------- | --------------- | ------------------------------------------------------------------------ |
+| `sfuProvider` | `ISFUProvider`  | Handles SFU room creation and short-lived token generation               |
+| `sfuUrl`      | `string`        | WebSocket URL of the SFU server, sent to clients so they can connect     |
+
+### `ISFUProvider` Interface
+
+Implement this to use a different SFU:
+
+```typescript
+interface ISFUProvider {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  generateToken(roomName: string, participantIdentity: string, opts?: TokenOptions): Promise<string>;
+  createRoom?(roomName: string, opts?: RoomOptions): Promise<void>;
+  deleteRoom?(roomName: string): Promise<void>;
+}
+```
+
+### Joining a Conference
+
+```typescript
+// Client sends (must be a member of the group):
+socket.emit("conference_join", { groupId: "group-uuid" });
+
+// Client receives a short-lived SFU token:
+socket.on("conference_token", (data) => {
+  // { groupId: string, sfuUrl: string, token: string }
+  // Connect to the SFU using the token and sfuUrl
+});
+
+// All group members receive:
+socket.on("conference_started", (data) => {
+  // { groupId: string, startedBy: string, participantCount: number }
+});
+
+// Subsequent joiners — other members receive:
+socket.on("conference_participant_joined", (data) => {
+  // { groupId: string, userId: string, participantCount: number }
+});
+
+// On error:
+socket.on("conference_error", (data) => {
+  // { groupId: string, error: string }
+});
+```
+
+### Leaving a Conference
+
+```typescript
+// Client sends:
+socket.emit("conference_leave", { groupId: "group-uuid" });
+
+// Other participants receive:
+socket.on("conference_participant_left", (data) => {
+  // { groupId: string, userId: string, participantCount: number }
+});
+
+// When the last participant leaves, all receive:
+socket.on("conference_ended", (data) => {
+  // { groupId: string }
+});
+```
+
+### Conference Automatic Cleanup
+
+When a user's **last** socket disconnects, they are removed from any active conference rooms they were in. The room is deleted from the SFU and `conference_ended` is broadcast when the last participant leaves.
+
+### Multi-device Support
+
+A user joining a conference from multiple devices counts as a single participant. Leaving from one device while another remains active is a no-op — the participant stays in the call until their last device disconnects or explicitly leaves.
+
+### Conference Error Messages
+
+| Error                              | Cause                                                  |
+| ---------------------------------- | ------------------------------------------------------ |
+| `"Not authenticated"`              | Client has not completed authentication                |
+| `"Not a member of this group"`     | The user is not a member of the group                  |
+| `"Failed to verify group membership"` | Cache error during membership check                 |
+| `"Failed to create conference room"` | SFU room creation failed                             |
+| `"Failed to generate access token"` | SFU token generation failed                          |
+
+---
+
 ## Connection Management
 
 The `ConnectionManager` tracks all active connections with dual-map lookups by socket ID and user ID.
@@ -946,12 +1058,14 @@ this.connectionManager // ConnectionManager — for looking up connections
 | `get_group_members`            | `{ groupId: string }`                                                       | Yes           | Group   |
 | `get_user_groups`              | `{}`                                                                        | Yes           | Group   |
 | `get_group_message_history`    | `{ groupId: string, limit?: number, before?: number }`                      | Yes           | Group   |
-| `call_get_ice_servers`         | `{}`                                                                        | Yes           | Voice   |
-| `call_initiate`                | `{ to: string, sdpOffer: string }`                                          | Yes           | Voice   |
-| `call_answer`                  | `{ callId: string, sdpAnswer: string }`                                     | Yes           | Voice   |
-| `call_reject`                  | `{ callId: string }`                                                        | Yes           | Voice   |
-| `call_hangup`                  | `{ callId: string }`                                                        | Yes           | Voice   |
-| `call_ice_candidate`           | `{ callId: string, candidate: IceCandidateInit }`                           | Yes           | Voice   |
+| `call_get_ice_servers`         | `{}`                                                                        | Yes           | Voice      |
+| `call_initiate`                | `{ to: string, sdpOffer: string }`                                          | Yes           | Voice      |
+| `call_answer`                  | `{ callId: string, sdpAnswer: string }`                                     | Yes           | Voice      |
+| `call_reject`                  | `{ callId: string }`                                                        | Yes           | Voice      |
+| `call_hangup`                  | `{ callId: string }`                                                        | Yes           | Voice      |
+| `call_ice_candidate`           | `{ callId: string, candidate: IceCandidateInit }`                           | Yes           | Voice      |
+| `conference_join`              | `{ groupId: string }`                                                       | Yes           | Conference |
+| `conference_leave`             | `{ groupId: string }`                                                       | Yes           | Conference |
 
 ### Server → Client
 
@@ -983,14 +1097,20 @@ this.connectionManager // ConnectionManager — for looking up connections
 | `group_members`          | `{ groupId: string, members: GroupMember[] }`                                                | Sender          | Group    |
 | `user_groups`            | `{ groups: Group[] }`                                                                        | Sender          | Group    |
 | `group_message_history`  | `{ groupId: string, messages: PersistedMessage[] }`                                          | Sender          | Group    |
-| `call_ice_servers`       | `{ iceServers: IceServer[] }`                                                                | Sender          | Voice    |
-| `call_ringing`           | `{ callId: string }`                                                                         | Caller          | Voice    |
-| `call_incoming`          | `{ callId: string, from: string, sdpOffer: string, iceServers: IceServer[] }`                | All callee devices | Voice |
-| `call_busy`              | `{ callId: string }`                                                                         | Caller          | Voice    |
-| `call_answered`          | `{ callId: string, sdpAnswer: string }`                                                      | All caller devices | Voice |
-| `call_rejected`          | `{ callId: string }`                                                                         | All caller devices | Voice |
-| `call_ended`             | `{ callId: string }`                                                                         | Other party     | Voice    |
-| `call_ice_candidate`     | `{ callId: string, candidate: IceCandidateInit }`                                            | Other party     | Voice    |
+| `call_ice_servers`               | `{ iceServers: IceServer[] }`                                                                        | Sender             | Voice      |
+| `call_ringing`                   | `{ callId: string }`                                                                                 | Caller             | Voice      |
+| `call_incoming`                  | `{ callId: string, from: string, sdpOffer: string, iceServers: IceServer[] }`                        | All callee devices | Voice      |
+| `call_busy`                      | `{ callId: string }`                                                                                 | Caller             | Voice      |
+| `call_answered`                  | `{ callId: string, sdpAnswer: string }`                                                              | All caller devices | Voice      |
+| `call_rejected`                  | `{ callId: string }`                                                                                 | All caller devices | Voice      |
+| `call_ended`                     | `{ callId: string }`                                                                                 | Other party        | Voice      |
+| `call_ice_candidate`             | `{ callId: string, candidate: IceCandidateInit }`                                                    | Other party        | Voice      |
+| `conference_token`               | `{ groupId: string, sfuUrl: string, token: string }`                                                 | Joining client     | Conference |
+| `conference_started`             | `{ groupId: string, startedBy: string, participantCount: number }`                                   | Group room         | Conference |
+| `conference_ended`               | `{ groupId: string }`                                                                                | Group room         | Conference |
+| `conference_participant_joined`  | `{ groupId: string, userId: string, participantCount: number }`                                      | Group room         | Conference |
+| `conference_participant_left`    | `{ groupId: string, userId: string, participantCount: number }`                                      | Group room         | Conference |
+| `conference_error`               | `{ groupId: string, error: string }`                                                                 | Joining client     | Conference |
 
 ---
 
@@ -1023,6 +1143,16 @@ this.connectionManager // ConnectionManager — for looking up connections
 | Not authenticated (send)         | `group_message_error` | `{ groupId: string, error: "Not authenticated" }` |
 | Sender not a member              | `group_message_error` | `{ groupId: string, error: "Not a member of this group" }` |
 | Store failure (send)             | `group_message_error` | `{ groupId: string, messageId: string, error: "Failed to save message" }` |
+
+### Conference Errors
+
+| Scenario                         | Event               | Payload                                                             |
+| -------------------------------- | ------------------- | ------------------------------------------------------------------- |
+| Not authenticated                | `conference_error`  | `{ groupId: string, error: "Not authenticated" }`                   |
+| Not a group member               | `conference_error`  | `{ groupId: string, error: "Not a member of this group" }`          |
+| Cache failure (membership check) | `conference_error`  | `{ groupId: string, error: "Failed to verify group membership" }`   |
+| SFU room creation failed         | `conference_error`  | `{ groupId: string, error: "Failed to create conference room" }`    |
+| SFU token generation failed      | `conference_error`  | `{ groupId: string, error: "Failed to generate access token" }`     |
 
 ### Typing Indicator Errors
 

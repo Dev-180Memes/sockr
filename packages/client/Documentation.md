@@ -27,6 +27,8 @@ Complete reference for the `sockr-client` package.
   - [useSendMessage](#usesendmessage)
   - [usePresence](#usepresence)
   - [useTypingIndicator](#usetypingindicator)
+  - [useVoiceCall](#usevoicecall)
+  - [useConferenceCall](#useconferencecall)
 - [Core Classes](#core-classes)
   - [ConnectionManager](#connectionmanager)
   - [EventEmitter](#eventemitter)
@@ -639,6 +641,211 @@ function TypingStatus() {
 - Automatically removes users from `usersTyping` after the timeout if no `typing_stop` event is received.
 - Cleans up all timers on unmount.
 
+### useVoiceCall
+
+Manages a WebRTC peer-to-peer voice or video call, including ICE negotiation, media stream lifecycle, and call state.
+
+```typescript
+import { useVoiceCall } from "sockr-client";
+
+function CallUI() {
+  const {
+    callState,     // CallState
+    incomingCall,  // IncomingCall | null
+    remoteStream,  // MediaStream | null
+    localStream,   // MediaStream | null
+    currentCallId, // string | null
+    startCall,     // (userId: string) => Promise<void>
+    answerCall,    // () => Promise<void>
+    rejectCall,    // () => void
+    hangUp,        // () => void
+  } = useVoiceCall({ video: false });
+
+  return (
+    <div>
+      {callState === "idle" && (
+        <button onClick={() => startCall("bob")}>Call Bob</button>
+      )}
+      {incomingCall && (
+        <>
+          <p>{incomingCall.from} is calling…</p>
+          <button onClick={answerCall}>Answer</button>
+          <button onClick={rejectCall}>Reject</button>
+        </>
+      )}
+      {callState === "active" && (
+        <>
+          <audio autoPlay ref={(el) => el && remoteStream && (el.srcObject = remoteStream)} />
+          <button onClick={hangUp}>Hang Up</button>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+#### Options
+
+| Option  | Type      | Default | Description                                           |
+| ------- | --------- | ------- | ----------------------------------------------------- |
+| `video` | `boolean` | `false` | Request a video track in addition to audio            |
+
+#### Return Value
+
+| Property       | Type                   | Description                                                   |
+| -------------- | ---------------------- | ------------------------------------------------------------- |
+| `callState`    | `CallState`            | Current call state (see below)                                |
+| `incomingCall` | `IncomingCall \| null` | Set when another user is calling you; `null` otherwise        |
+| `remoteStream` | `MediaStream \| null`  | Remote audio/video — attach to `<audio>` or `<video>`         |
+| `localStream`  | `MediaStream \| null`  | Local audio/video — attach to a muted `<video>` for preview   |
+| `currentCallId`| `string \| null`       | Active call ID                                                 |
+| `startCall`    | `(userId) => Promise`  | Fetch ICE servers, get mic/camera, create offer, call user    |
+| `answerCall`   | `() => Promise`        | Accept the current `incomingCall`                             |
+| `rejectCall`   | `() => void`           | Reject the current `incomingCall` without answering           |
+| `hangUp`       | `() => void`           | End the active call                                           |
+
+#### `CallState`
+
+```typescript
+type CallState = "idle" | "calling" | "ringing" | "active" | "busy" | "ended";
+```
+
+| Value      | Meaning                                                  |
+| ---------- | -------------------------------------------------------- |
+| `"idle"`   | No call in progress                                      |
+| `"calling"`| Outgoing call initiated, waiting for ringing confirmation|
+| `"ringing"`| Caller: callee's device is ringing. Callee: incoming call|
+| `"active"` | Call is connected, media flowing                         |
+| `"busy"`   | Callee was already in a call                             |
+| `"ended"`  | Call just ended (transitions back to `"idle"` on cleanup)|
+
+**Behavior:**
+
+- Fetches fresh ICE servers from the server before creating `RTCPeerConnection`.
+- Buffers incoming ICE candidates until the remote description is set.
+- Auto-rejects an incoming call if already in a call.
+- Stops all media tracks and closes `RTCPeerConnection` on hang up, rejection, or unmount.
+
+### useConferenceCall
+
+Manages an SFU-based group conference call. Requires a client-side SFU adapter (e.g. `LiveKitClientAdapter`) and a group created with `useGroupMessaging`.
+
+```typescript
+import { useConferenceCall, LiveKitClientAdapter } from "sockr-client";
+import { useMemo, useRef } from "react";
+
+function ConferenceRoom({ groupId }: { groupId: string }) {
+  const adapter = useMemo(() => new LiveKitClientAdapter(), []);
+  const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+
+  const {
+    conferenceState,  // ConferenceState
+    participants,     // ConferenceCallParticipant[]
+    error,            // string | null
+    activeGroupId,    // string | null
+    joinConference,   // (groupId: string) => void
+    leaveConference,  // () => void
+    onRemoteTrack,    // (handler) => void
+  } = useConferenceCall({ adapter, audio: true, video: true });
+
+  // Register a handler for remote tracks
+  onRemoteTrack((track, participantId) => {
+    const el = remoteVideoRefs.current.get(participantId);
+    if (el) {
+      el.srcObject = new MediaStream([track]);
+      el.play();
+    }
+  });
+
+  return (
+    <div>
+      <p>State: {conferenceState}</p>
+      <p>{participants.length} participant(s)</p>
+      {conferenceState === "idle" && (
+        <button onClick={() => joinConference(groupId)}>Join Call</button>
+      )}
+      {conferenceState === "active" && (
+        <button onClick={leaveConference}>Leave</button>
+      )}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {participants.map((p) => (
+        <video
+          key={p.userId}
+          ref={(el) => el && remoteVideoRefs.current.set(p.userId, el)}
+          autoPlay
+          playsInline
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+#### Conference Options
+
+| Option    | Type               | Default | Description                                           |
+| --------- | ------------------ | ------- | ----------------------------------------------------- |
+| `adapter` | `ISFUClientAdapter`| —       | **Required.** SFU client adapter instance             |
+| `audio`   | `boolean`          | `true`  | Publish local audio on join                           |
+| `video`   | `boolean`          | `false` | Publish local video on join                           |
+
+#### Conference Return Value
+
+| Property          | Type                              | Description                                                |
+| ----------------- | --------------------------------- | ---------------------------------------------------------- |
+| `conferenceState` | `ConferenceState`                 | Current state of the conference                            |
+| `participants`    | `ConferenceCallParticipant[]`     | Participants currently in the conference (including self)  |
+| `error`           | `string \| null`                  | Error message, or `null`                                   |
+| `activeGroupId`   | `string \| null`                  | The groupId of the active conference, or `null`            |
+| `joinConference`  | `(groupId: string) => void`       | Request to join (or start) a conference for the group      |
+| `leaveConference` | `() => void`                      | Leave the current conference                               |
+| `onRemoteTrack`   | `(handler) => void`               | Register a callback to receive remote `MediaStreamTrack`s  |
+
+#### `ConferenceState`
+
+```typescript
+type ConferenceState = "idle" | "joining" | "active" | "ended" | "error";
+```
+
+#### `LiveKitClientAdapter`
+
+A ready-made SFU adapter for [LiveKit](https://livekit.io). Requires `livekit-client` installed in your project:
+
+```bash
+npm install livekit-client
+```
+
+```typescript
+import { LiveKitClientAdapter } from "sockr-client";
+
+const adapter = new LiveKitClientAdapter();
+```
+
+The adapter is loaded lazily — projects not using LiveKit are unaffected. You can implement `ISFUClientAdapter` to use any other SFU.
+
+#### `ISFUClientAdapter` Interface
+
+```typescript
+interface ISFUClientAdapter {
+  connect(sfuUrl: string, token: string, opts?: SFUConnectOptions): Promise<void>;
+  disconnect(): Promise<void>;
+  publishTracks(opts?: SFUPublishOptions): Promise<void>;
+  onTrackSubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onTrackUnsubscribed(handler: (track: MediaStreamTrack, participantId: string) => void): void;
+  onParticipantConnected(handler: (participantId: string) => void): void;
+  onParticipantDisconnected(handler: (participantId: string) => void): void;
+  onDisconnected(handler: () => void): void;
+}
+```
+
+**Behavior:**
+
+- `joinConference(groupId)` emits `conference_join` to the server; the server responds with a `conference_token` event containing a short-lived SFU token.
+- On receiving the token, the hook calls `adapter.connect(sfuUrl, token, { audio, video })`.
+- Remote tracks are surfaced via `onRemoteTrack` — attach them to `<audio>` or `<video>` elements.
+- `leaveConference()` emits `conference_leave` and calls `adapter.disconnect()`.
+- Disconnects from the SFU on component unmount.
+
 ---
 
 ## Core Classes
@@ -800,6 +1007,20 @@ Calling `disconnect()` cancels any pending reconnection and prevents future reco
 | `message_error` | `{ messageId?: string, error: string }` | Message delivery failed |
 | `typing_start` | `{ from: string }` | A user started typing |
 | `typing_stop` | `{ from: string }` | A user stopped typing |
+| `call_ice_servers` | `{ iceServers: IceServer[] }` | ICE server list response |
+| `call_incoming` | `{ callId, from, sdpOffer, iceServers }` | Incoming P2P call |
+| `call_ringing` | `{ callId: string }` | Callee's device is ringing |
+| `call_answered` | `{ callId, sdpAnswer: string }` | Callee answered |
+| `call_rejected` | `{ callId: string }` | Callee rejected the call |
+| `call_ended` | `{ callId: string }` | Call ended by either party |
+| `call_busy` | `{ callId: string }` | Callee is already in a call |
+| `call_ice_candidate` | `{ callId, candidate: IceCandidateInit }` | Trickle ICE candidate |
+| `conference_token` | `{ groupId, sfuUrl, token: string }` | SFU access token for conference join |
+| `conference_started` | `{ groupId, startedBy, participantCount }` | A conference started in a group |
+| `conference_ended` | `{ groupId: string }` | Conference ended (last participant left) |
+| `conference_participant_joined` | `{ groupId, userId, participantCount }` | A participant joined |
+| `conference_participant_left` | `{ groupId, userId, participantCount }` | A participant left |
+| `conference_error` | `{ groupId, error: string }` | Conference join/error event |
 
 ### Emitted Events (Client -> Server)
 
@@ -810,6 +1031,14 @@ Calling `disconnect()` cancels any pending reconnection and prevents future reco
 | `send_message` | `{ to, content, metadata? }` | Yes | Send a direct message |
 | `typing_start` | `{ to: string }` | Yes | Notify typing started |
 | `typing_stop` | `{ to: string }` | Yes | Notify typing stopped |
+| `call_get_ice_servers` | `{}` | Yes | Request ICE server credentials |
+| `call_initiate` | `{ to, sdpOffer: string }` | Yes | Start a P2P call |
+| `call_answer` | `{ callId, sdpAnswer: string }` | Yes | Answer an incoming call |
+| `call_reject` | `{ callId: string }` | Yes | Reject an incoming call |
+| `call_hangup` | `{ callId: string }` | Yes | End the active call |
+| `call_ice_candidate` | `{ callId, candidate: IceCandidateInit }` | Yes | Send trickle ICE candidate |
+| `conference_join` | `{ groupId: string }` | Yes | Join (or start) a group conference |
+| `conference_leave` | `{ groupId: string }` | Yes | Leave the active conference |
 
 ---
 
