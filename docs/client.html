@@ -363,7 +363,7 @@ const client = new SocketClient(config: ClientConfig);</code></pre>
     <!-- SocketProvider -->
     <h2 id="socket-provider">SocketProvider</h2>
     <p>React context provider. Wraps your component tree and makes all hooks available.</p>
-    <pre><code>import { SocketProvider } from 'sockr-client/react';
+    <pre><code>import { SocketProvider } from 'sockr-client';
 
 function App() {
   return (
@@ -743,7 +743,7 @@ onRemoteTrack((track, participantId) => {
     <!-- React Native -->
     <h2 id="react-native">React Native</h2>
     <p>Sockr client works with React Native. Use WebSocket-only transport — polling is not supported in React Native environments.</p>
-    <pre><code>import { SocketProvider } from 'sockr-client/react';
+    <pre><code>import { SocketProvider } from 'sockr-client';
 
 function App() {
   return (

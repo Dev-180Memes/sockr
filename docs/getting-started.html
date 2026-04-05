@@ -218,12 +218,12 @@ await server.listen();</code></pre>
     <h2 id="client-react">Client — React</h2>
     <p>Wrap your app in <code>SocketProvider</code>. Provide a <code>url</code> and optionally a <code>token</code> — authentication is triggered automatically once connected.</p>
 
-    <pre><code>import { SocketProvider } from 'sockr-client/react';
+    <pre><code>import { SocketProvider } from 'sockr-client';
 
 function App() {
   return (
     &lt;SocketProvider
-      config={{ url: "http://localhost:3000", autoConnect: true }}
+      config={{ url: "http://localhost:3000" }}
       token={authToken}
     &gt;
       &lt;YourApp /&gt;
